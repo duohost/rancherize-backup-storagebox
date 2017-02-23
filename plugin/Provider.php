@@ -1,4 +1,4 @@
-<?php
+<?php namespace RancherizeBackupStoragebox;
 
 use Rancherize\Plugin\ProviderTrait;
 
