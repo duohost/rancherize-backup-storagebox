@@ -1,0 +1,21 @@
+{
+    "name": "ipunktbs/rancherize-backup-storagebox",
+    "description": "Rancherize plugin adding backup commands for use witha a hetzner storagebox",
+    "type": "project",
+    "license": "MIT",
+	 "autoload":{
+		"psr-4": {
+			"RancherizeBackupStoragebox\\": "plugin/"
+		}
+	 },
+    "authors": [
+        {
+            "name": "Sven Speckmaier",
+            "email": "sps@ipunkt.biz"
+        }
+    ],
+	 "extra":{
+		"rancherize-provider": "RancherizeBackupStoragebox\\Provider"
+	 },
+    "require": {}
+}
