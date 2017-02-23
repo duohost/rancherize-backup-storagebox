@@ -1,5 +1,5 @@
 {
-    "name": "ipunktbs/rancherize-backup-storagebox",
+    "name": "ipunkt/rancherize-backup-storagebox",
     "description": "Rancherize plugin adding backup commands for use witha a hetzner storagebox",
     "type": "project",
     "license": "MIT",
@@ -17,5 +17,8 @@
 	 "extra":{
 		"rancherize-provider": "RancherizeBackupStoragebox\\Provider"
 	 },
-    "require": {}
+    "require": {},
+    "require-dev": {
+        "ipunkt/rancherize": "^2.2.0"
+    }
 }
