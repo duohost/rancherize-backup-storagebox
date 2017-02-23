@@ -2,7 +2,7 @@
 
 use Rancherize\Plugin\ProviderTrait;
 
-class Provider implements Rancherize\Plugin\Provider {
+class Provider implements \Rancherize\Plugin\Provider {
 
 	use ProviderTrait;
 
