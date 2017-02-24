@@ -43,16 +43,12 @@ class Provider implements \Rancherize\Plugin\Provider {
 			return new ConfigurationStorageboxRepository($c['storagebox-parser']);
 		};
 
-		$container['storagebox-method'] = function($c) {
-
-		};
-
-		$container['access-method-factory'] = function($c) {
+		$container['access-method-factory'] = function() {
 			return new ArrayAccessMethodFactory([]);
 		};
 
 		$container['storagebox-method'] = function($c) {
-			return new StorageboxMethod($c['storagebox-method'], $c['access-method-factory']);
+			return new StorageboxMethod($c['storagebox-repository'], $c['access-method-factory']);
 		};
 	}
 
