@@ -20,7 +20,6 @@ class ConfigurationStorageboxRepository implements StorageboxRepository {
 
 	/**
 	 * ConfigurationStorageboxRepository constructor.
-	 * @param Configuration $configuration
 	 * @param StorageboxParser $parser
 	 */
 	public function __construct(StorageboxParser $parser) {

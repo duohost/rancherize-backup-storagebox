@@ -30,7 +30,7 @@ class SFTPAccessMethod implements AccessMethod {
 	 */
 	public function list() {
 
-		$host = parse_url($this->url);
+		$host = parse_url($this->url, PHP_URL_HOST);
 		$path = parse_url($this->url, PHP_URL_PATH);
 
 		$port = parse_url($this->url, PHP_URL_PORT);
