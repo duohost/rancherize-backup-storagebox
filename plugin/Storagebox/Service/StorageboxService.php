@@ -44,7 +44,7 @@ class StorageboxService {
 
 		$this->databaseRepository->setConfiguration($configuration);
 
-		$databaseName = $configuration->get('project.environments'.$environment.'.database.global');
+		$databaseName = $configuration->get('project.environments.'.$environment.'.database.global');
 		if($databaseName == null) {
 			$output->writeln("Global Database not set for $environment, can not have a backup configuration.");
 			return;
