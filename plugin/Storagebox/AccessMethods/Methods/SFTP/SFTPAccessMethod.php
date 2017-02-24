@@ -38,6 +38,7 @@ class SFTPAccessMethod implements AccessMethod {
 			$port = 22;
 
 		$connection = new SFTPConnection($host, $port);
+		$connection->login($this->user, $this->password);
 		$directories = $connection->scanFilesystem($path, SFTPConnection::SCAN_DIRECTORIES);
 
 		$backups = [];
