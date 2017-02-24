@@ -3,6 +3,8 @@
 use Closure;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
 use RancherizeBackupStoragebox\Backup\Exceptions\MethodNotFoundException;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\StorageboxMethod;
+use RancherizeBackupStoragebox\Storagebox\Parser\Exceptions\StorageboxFieldMissingException;
 
 /**
  * Class ArrayBackupMethodFactory
@@ -14,8 +16,28 @@ class ArrayBackupMethodFactory implements BackupMethodFactory {
 	 * @var Closure[]
 	 */
 	protected $methods = [
-		'storagebox'
 	];
+
+	/**
+	 * ArrayBackupMethodFactory constructor.
+	 */
+	public function __construct() {
+		$this->methods = [
+			'storagebox' => function(array $backupData) {
+				/**
+				 * @var StorageboxMethod $method
+				 */
+				$method = container('storagebox-method');
+
+				if(in_array('box', $backupData))
+					throw new StorageboxFieldMissingException('box', $backupData);
+
+				$method->setStorageBox($backupData['box']);
+
+				return $method;
+			}
+		];
+	}
 
 	/**
 	 * @param string $backupMethod

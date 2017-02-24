@@ -2,7 +2,9 @@
 use Closure;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\AccessMethod;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\AccessMethodFactory;
+use RancherizeBackupStoragebox\Storagebox\AccessMethods\Exceptions\AccessFieldMissingException;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\Exceptions\AccessMethodNotFoundException;
+use RancherizeBackupStoragebox\Storagebox\AccessMethods\Methods\SFTP\SFTPAccessMethod;
 
 /**
  * Class ArrayAccessMethodFactory
@@ -21,6 +23,24 @@ class ArrayAccessMethodFactory implements AccessMethodFactory {
 	 * @param array $methods
 	 */
 	public function __construct(array $methods) {
+
+		$this->methods = [
+			'sftp' => function(array $accessData) {
+				$method = new SFTPAccessMethod();
+
+				foreach(['url', 'user', 'password'] as $field) {
+					if(!array_key_exists($field, $accessData))
+						throw new AccessFieldMissingException('sftp', $field, $accessData);
+				}
+
+				$method->setUrl($accessData['url']);
+				$method->setUser($accessData['user']);
+				$method->setPassword($accessData['password']);
+
+				return $method;
+			}
+		];
+
 		$this->methods = array_merge(
 			$this->methods,
 			$methods

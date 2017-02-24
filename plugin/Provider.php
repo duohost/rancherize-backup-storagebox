@@ -2,9 +2,11 @@
 
 use Rancherize\Plugin\ProviderTrait;
 use RancherizeBackupStoragebox\Backup\Factory\ArrayBackupMethodFactory;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\StorageboxMethod;
 use RancherizeBackupStoragebox\Commands\BackupListCommand;
 use RancherizeBackupStoragebox\Database\Parser\DatabaseParser;
 use RancherizeBackupStoragebox\Database\Repository\ConfigurationDatabaseRepository;
+use RancherizeBackupStoragebox\Storagebox\AccessMethods\Factory\ArrayAccessMethodFactory;
 use RancherizeBackupStoragebox\Storagebox\Parser\StorageboxParser;
 use RancherizeBackupStoragebox\Storagebox\Repository\ConfigurationStorageboxRepository;
 use RancherizeBackupStoragebox\Storagebox\Service\StorageboxService;
@@ -39,6 +41,18 @@ class Provider implements \Rancherize\Plugin\Provider {
 
 		$container['storagebox-repository'] = function($c) {
 			return new ConfigurationStorageboxRepository($c['storagebox-parser']);
+		};
+
+		$container['storagebox-method'] = function($c) {
+
+		};
+
+		$container['access-method-factory'] = function($c) {
+			return new ArrayAccessMethodFactory([]);
+		};
+
+		$container['storagebox-method'] = function($c) {
+			return new StorageboxMethod($c['storagebox-method'], $c['access-method-factory']);
 		};
 	}
 
