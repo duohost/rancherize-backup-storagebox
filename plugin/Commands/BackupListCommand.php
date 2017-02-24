@@ -1,5 +1,7 @@
 <?php namespace RancherizeBackupStoragebox\Commands;
 
+use Rancherize\Configuration\Traits\LoadsConfigurationTrait;
+use RancherizeBackupStoragebox\Storagebox\Traits\UsesStorageboxService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -10,11 +12,15 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class BackupListCommand extends Command {
 
+	use LoadsConfigurationTrait;
+	use UsesStorageboxService;
+
 	protected function configure() {
 		$this
 			->setName('backup:list')
 			->setDescription('List available backups.')
 			->setHelp('Connects to the hetzner storagebox and lists the available backups stored there.')
+			->addArgument('environment')
 		;
 	}
 
@@ -24,7 +30,11 @@ class BackupListCommand extends Command {
 	 * @return int|null|void
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output) {
-		echo "Hi!";
+		$configuration = $this->loadConfiguration();
+		$environment = $input->getArgument('environment');
+
+		$storageboxService = $this->getStorageboxService();
+		$storageboxService->list($configuration, $environment, $input, $output);
 	}
 
 
