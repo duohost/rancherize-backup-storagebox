@@ -3,6 +3,7 @@
 use Rancherize\Configuration\Traits\LoadsConfigurationTrait;
 use RancherizeBackupStoragebox\Storagebox\Traits\UsesStorageboxService;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -20,7 +21,7 @@ class BackupListCommand extends Command {
 			->setName('backup:list')
 			->setDescription('List available backups.')
 			->setHelp('Connects to the hetzner storagebox and lists the available backups stored there.')
-			->addArgument('environment')
+			->addArgument('environment', InputArgument::REQUIRED)
 		;
 	}
 
