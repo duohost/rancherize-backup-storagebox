@@ -48,13 +48,14 @@ class SFTPConnection {
 
 	public function scanFilesystem($remote_file, $scan = self::SCAN_BOTH) {
 		$sftp = $this->sftp;
-		$dir = "ssh2.sftp://$sftp$remote_file";
+		$dir = "ssh2.sftp://".intval($sftp)."$remote_file";
 		$tempArray = array();
 		$handle = opendir($dir);
 		// List all the files
 		while (false !== ($file = readdir($handle))) {
 			if (substr("$file", 0, 1) != "."){
-				if(is_dir($file)){
+				$uri = "ssh2.sftp://".intval($sftp)."$remote_file/$file";
+				if(is_dir($uri)){
 					if( $scan & self::SCAN_DIRECTORIES )
 						$tempArray[]=$file;
 				} else {
