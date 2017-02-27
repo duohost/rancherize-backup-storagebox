@@ -5,6 +5,8 @@ use Rancherize\Commands\Traits\RancherTrait;
 use Rancherize\Configuration\Configurable;
 use Rancherize\Configuration\Configuration;
 use Rancherize\Configuration\PrefixConfigurableDecorator;
+use Rancherize\Configuration\Traits\EnvironmentConfigurationTrait;
+use Rancherize\RancherAccess\RancherAccessService;
 use RancherizeBackupStoragebox\Backup\Factory\BackupMethodFactory;
 use RancherizeBackupStoragebox\Database\Repository\DatabaseRepository;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,8 +19,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 class StorageboxService {
 
 	use IoTrait;
-
 	use RancherTrait;
+	use EnvironmentConfigurationTrait;
 
 	/**
 	 * @var DatabaseRepository
@@ -86,8 +88,8 @@ class StorageboxService {
 	 * @param OutputInterface $output
 	 */
 	public function backup(string $environment, string $backup, Configurable $configuration, InputInterface $input, OutputInterface $output) {
-		$environmentConfig = new PrefixConfigurableDecorator($configuration, "project.environments.$environment");
-		$globalDatabaseName = $environmentConfig->get('database.global.', null);
+		$environmentConfig = $this->environmentConfig($configuration, $environment);
+		$globalDatabaseName = $environmentConfig->get('database.global', null);
 
 		if($globalDatabaseName === null) {
 			$output->writeln("Global Database not set for $environment, can not have a backup configuration.");
@@ -102,6 +104,9 @@ class StorageboxService {
 		}
 
 		$rancherService = $this->getRancher();
+		$rancherConfiguration = new RancherAccessService($configuration);
+		$rancherAccount = $rancherConfiguration->getAccount( $environmentConfig->get('rancher.account') );
+		$rancherService->setAccount($rancherAccount);
 
 		$databaseStack = $database->getStack();
 		$databaseService = $database->getService();
