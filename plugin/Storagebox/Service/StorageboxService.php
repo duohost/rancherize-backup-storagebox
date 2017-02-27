@@ -6,6 +6,9 @@ use Rancherize\Configuration\Configurable;
 use Rancherize\Configuration\Configuration;
 use Rancherize\Configuration\PrefixConfigurableDecorator;
 use Rancherize\Configuration\Traits\EnvironmentConfigurationTrait;
+use Rancherize\Docker\DockerComposeParser\NotFoundException;
+use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
+use Rancherize\Docker\DockerComposerVersionizer;
 use Rancherize\RancherAccess\RancherAccessService;
 use RancherizeBackupStoragebox\Backup\Factory\BackupMethodFactory;
 use RancherizeBackupStoragebox\Database\Repository\DatabaseRepository;
@@ -30,15 +33,28 @@ class StorageboxService {
 	 * @var BackupMethodFactory
 	 */
 	private $methodFactory;
+	/**
+	 * @var DockerComposeReader
+	 */
+	private $composeReader;
+	/**
+	 * @var DockerComposerVersionizer
+	 */
+	private $composerVersionizer;
 
 	/**
 	 * StorageboxService constructor.
 	 * @param DatabaseRepository $databaseRepository
 	 * @param BackupMethodFactory $methodFactory
+	 * @param DockerComposeReader $composeReader
+	 * @param DockerComposerVersionizer $composerVersionizer
 	 */
-	public function __construct(DatabaseRepository $databaseRepository, BackupMethodFactory $methodFactory) {
+	public function __construct(DatabaseRepository $databaseRepository, BackupMethodFactory $methodFactory,
+							DockerComposeReader $composeReader, DockerComposerVersionizer $composerVersionizer) {
 		$this->databaseRepository = $databaseRepository;
 		$this->methodFactory = $methodFactory;
+		$this->composeReader = $composeReader;
+		$this->composerVersionizer = $composerVersionizer;
 	}
 
 	/**
@@ -111,12 +127,17 @@ class StorageboxService {
 		$databaseStack = $database->getStack();
 		$databaseService = $database->getService();
 
-		$currentConfig = $rancherService->retrieveConfig($databaseStack);
-		if( !array_key_exists($databaseService, $currentConfig) ) {
+		list($currentConfig, $currentRancherize) = $rancherService->retrieveConfig($databaseStack);
+		$composeData = $this->composeReader->read($currentConfig);
+		$composeVersion = $this->composerVersionizer->parse($composeData);
+		try {
+			$stack = $composeVersion->getService($databaseStack, $composeData);
+		} catch(NotFoundException $e) {
 			$output->writeln("Restore failed: stack ${databaseService} was not found within ${databaseStack}");
 			return;
 		}
 
+		var_dump($stack);
 	}
 
 }
