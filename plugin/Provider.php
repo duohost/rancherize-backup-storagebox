@@ -34,7 +34,7 @@ class Provider implements \Rancherize\Plugin\Provider {
 		};
 
 		$container['storagebox-service'] = function($c) {
-			return new StorageboxService($c['database-repository'], $c['backup-method-factory']);
+			return new StorageboxService($c['database-repository'], $c['backup-method-factory'], $c['docker-compose-reader'], $c['docker-compose-versionizer']);
 		};
 
 		$container['storagebox-parser'] = function() {
