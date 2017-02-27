@@ -79,14 +79,15 @@ class StorageboxService {
 	}
 
 	/**
-	 * @param $environment
-	 * @param Configuration $configuration
+	 * @param string $environment
+	 * @param string $backup
+	 * @param Configurable|Configuration $configuration
 	 * @param InputInterface $input
 	 * @param OutputInterface $output
 	 */
-	public function backup(string $environment, Configurable $configuration, InputInterface $input, OutputInterface $output) {
+	public function backup(string $environment, string $backup, Configurable $configuration, InputInterface $input, OutputInterface $output) {
 		$environmentConfig = new PrefixConfigurableDecorator($configuration, "project.environments.$environment");
-		$globalDatabaseName = $environmentConfig->get('database.global', null);
+		$globalDatabaseName = $environmentConfig->get('database.global.', null);
 
 		if($globalDatabaseName === null) {
 			$output->writeln("Global Database not set for $environment, can not have a backup configuration.");

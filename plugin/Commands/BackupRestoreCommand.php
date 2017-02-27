@@ -41,7 +41,7 @@ class BackupRestoreCommand extends Command {
 
 		$configuration = $this->loadConfiguration();
 		$storageboxService = $this->getStorageboxService();
-		$storageboxService->backup($environment, $configuration, $input, $output);
+		$storageboxService->backup($environment, $backup, $configuration, $input, $output);
 
 		return 0;
 	}
