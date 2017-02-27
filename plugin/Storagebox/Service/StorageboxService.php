@@ -94,6 +94,7 @@ class StorageboxService {
 			return;
 		}
 
+		$this->databaseRepository->setConfiguration($configuration);
 		$database = $this->databaseRepository->find($globalDatabaseName);
 		if($database->getBackupData() === null) {
 			$output->writeln("No backup set for Database $globalDatabaseName.");
