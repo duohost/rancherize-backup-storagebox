@@ -21,7 +21,7 @@ class BackupRestoreCommand extends Command {
 	 */
 	protected function configure() {
 		$this
-			->setName('restore:restore')
+			->setName('backup:restore')
 			->setDescription('restore a previously created restore')
 			->setHelp('Clones the database service with a fresh named volume for /var/lib/mysql, then populates this named volume with the restore given as [restore].')
 			->addArgument('environment', InputArgument::REQUIRED, 'The environment for which the restore should be restored')

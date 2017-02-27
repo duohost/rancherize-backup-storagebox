@@ -18,7 +18,7 @@ class BackupListCommand extends Command {
 
 	protected function configure() {
 		$this
-			->setName('restore:list')
+			->setName('backup:list')
 			->setDescription('List available backups.')
 			->setHelp('Connects to the hetzner storagebox and lists the available backups stored there.')
 			->addArgument('environment', InputArgument::REQUIRED)
