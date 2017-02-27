@@ -29,12 +29,12 @@ class Provider implements \Rancherize\Plugin\Provider {
 			return new ConfigurationDatabaseRepository($c['database-parser']);
 		};
 
-		$container['backup-method-factory'] = function() {
+		$container['restore-method-factory'] = function() {
 			return new ArrayBackupMethodFactory();
 		};
 
 		$container['storagebox-service'] = function($c) {
-			return new StorageboxService($c['database-repository'], $c['backup-method-factory'], $c['docker-compose-reader'], $c['docker-compose-versionizer']);
+			return new StorageboxService($c['database-repository'], $c['restore-method-factory'], $c['docker-compose-reader'], $c['docker-compose-versionizer']);
 		};
 
 		$container['storagebox-parser'] = function() {

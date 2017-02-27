@@ -70,20 +70,20 @@ class StorageboxService {
 
 		$databaseName = $configuration->get('project.environments.'.$environment.'.database.global');
 		if($databaseName == null) {
-			$output->writeln("Global Database not set for $environment, can not have a backup configuration.");
+			$output->writeln("Global Database not set for $environment, can not have a restore configuration.");
 			return;
 		}
 
 		$database = $this->databaseRepository->find($databaseName);
 		if($database->getBackupData() === null) {
-			$output->writeln("No backup set for Database $databaseName.");
+			$output->writeln("No restore set for Database $databaseName.");
 			return;
 		}
 
 		$backupData = $database->getBackupData();
 		$backupMethod = $backupData['method'];
 
-		$output->writeln("Environment $environment uses backup method $backupMethod");
+		$output->writeln("Environment $environment uses restore method $backupMethod");
 		$method = $this->methodFactory->make($backupMethod, $backupData);
 		$method->setConfiguration($configuration);
 
@@ -103,19 +103,19 @@ class StorageboxService {
 	 * @param InputInterface $input
 	 * @param OutputInterface $output
 	 */
-	public function backup(string $environment, string $backup, Configurable $configuration, InputInterface $input, OutputInterface $output) {
+	public function restore(string $environment, string $backup, Configurable $configuration, InputInterface $input, OutputInterface $output) {
 		$environmentConfig = $this->environmentConfig($configuration, $environment);
 		$globalDatabaseName = $environmentConfig->get('database.global', null);
 
 		if($globalDatabaseName === null) {
-			$output->writeln("Global Database not set for $environment, can not have a backup configuration.");
+			$output->writeln("Global Database not set for $environment, can not have a restore configuration.");
 			return;
 		}
 
 		$this->databaseRepository->setConfiguration($configuration);
 		$database = $this->databaseRepository->find($globalDatabaseName);
 		if($database->getBackupData() === null) {
-			$output->writeln("No backup set for Database $globalDatabaseName.");
+			$output->writeln("No restore set for Database $globalDatabaseName.");
 			return;
 		}
 
@@ -131,13 +131,13 @@ class StorageboxService {
 		$composeData = $this->composeReader->read($currentConfig);
 		$composeVersion = $this->composerVersionizer->parse($composeData);
 		try {
-			$stack = $composeVersion->getService($databaseStack, $composeData);
+			$service = $composeVersion->getService($databaseService, $composeData);
 		} catch(NotFoundException $e) {
 			$output->writeln("Restore failed: stack ${databaseService} was not found within ${databaseStack}");
 			return;
 		}
 
-		var_dump($stack);
+		var_dump($service);
 	}
 
 }

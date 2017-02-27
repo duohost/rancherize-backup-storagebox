@@ -21,11 +21,11 @@ class BackupRestoreCommand extends Command {
 	 */
 	protected function configure() {
 		$this
-			->setName('backup:restore')
-			->setDescription('restore a previously created backup')
-			->setHelp('Clones the database service with a fresh named volume for /var/lib/mysql, then populates this named volume with the backup given as [backup].')
-			->addArgument('environment', InputArgument::REQUIRED, 'The environment for which the backup should be restored')
-			->addArgument('backup', InputArgument::REQUIRED, 'The backup to restore')
+			->setName('restore:restore')
+			->setDescription('restore a previously created restore')
+			->setHelp('Clones the database service with a fresh named volume for /var/lib/mysql, then populates this named volume with the restore given as [restore].')
+			->addArgument('environment', InputArgument::REQUIRED, 'The environment for which the restore should be restored')
+			->addArgument('restore', InputArgument::REQUIRED, 'The restore to restore')
 			;
 	}
 
@@ -37,11 +37,11 @@ class BackupRestoreCommand extends Command {
 	protected function execute(InputInterface $input, OutputInterface $output) {
 
 		$environment = $input->getArgument('environment');
-		$backup = $input->getArgument('backup');
+		$backup = $input->getArgument('restore');
 
 		$configuration = $this->loadConfiguration();
 		$storageboxService = $this->getStorageboxService();
-		$storageboxService->backup($environment, $backup, $configuration, $input, $output);
+		$storageboxService->restore($environment, $backup, $configuration, $input, $output);
 
 		return 0;
 	}
