@@ -4,6 +4,7 @@ use Rancherize\Plugin\ProviderTrait;
 use RancherizeBackupStoragebox\Backup\Factory\ArrayBackupMethodFactory;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\StorageboxMethod;
 use RancherizeBackupStoragebox\Commands\BackupListCommand;
+use RancherizeBackupStoragebox\Commands\BackupRestoreCommand;
 use RancherizeBackupStoragebox\Database\Parser\DatabaseParser;
 use RancherizeBackupStoragebox\Database\Repository\ConfigurationDatabaseRepository;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\Factory\ArrayAccessMethodFactory;
@@ -17,6 +18,7 @@ class Provider implements \Rancherize\Plugin\Provider {
 
 	public function register() {
 		$this->app->add( new BackupListCommand() );
+		$this->app->add( new BackupRestoreCommand() );
 		$container = container();
 
 		$container['database-parser'] = function() {

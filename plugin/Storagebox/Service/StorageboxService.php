@@ -1,7 +1,10 @@
 <?php namespace RancherizeBackupStoragebox\Storagebox\Service;
 
 use Rancherize\Commands\Traits\IoTrait;
+use Rancherize\Commands\Traits\RancherTrait;
+use Rancherize\Configuration\Configurable;
 use Rancherize\Configuration\Configuration;
+use Rancherize\Configuration\PrefixConfigurableDecorator;
 use RancherizeBackupStoragebox\Backup\Factory\BackupMethodFactory;
 use RancherizeBackupStoragebox\Database\Repository\DatabaseRepository;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,6 +17,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class StorageboxService {
 
 	use IoTrait;
+
+	use RancherTrait;
+
 	/**
 	 * @var DatabaseRepository
 	 */
@@ -71,4 +77,39 @@ class StorageboxService {
 			$output->writeln("'$key' => '$name'");
 		}
 	}
+
+	/**
+	 * @param $environment
+	 * @param Configuration $configuration
+	 * @param InputInterface $input
+	 * @param OutputInterface $output
+	 */
+	public function backup(string $environment, Configurable $configuration, InputInterface $input, OutputInterface $output) {
+		$environmentConfig = new PrefixConfigurableDecorator($configuration, "project.environments.$environment");
+		$globalDatabaseName = $environmentConfig->get('database.global', null);
+
+		if($globalDatabaseName === null) {
+			$output->writeln("Global Database not set for $environment, can not have a backup configuration.");
+			return;
+		}
+
+		$database = $this->databaseRepository->find($globalDatabaseName);
+		if($database->getBackupData() === null) {
+			$output->writeln("No backup set for Database $globalDatabaseName.");
+			return;
+		}
+
+		$rancherService = $this->getRancher();
+
+		$databaseStack = $database->getStack();
+		$databaseService = $database->getService();
+
+		$currentConfig = $rancherService->retrieveConfig($databaseStack);
+		if( !array_key_exists($databaseService, $currentConfig) ) {
+			$output->writeln("Restore failed: stack ${databaseService} was not found within ${databaseStack}");
+			return;
+		}
+
+	}
+
 }
