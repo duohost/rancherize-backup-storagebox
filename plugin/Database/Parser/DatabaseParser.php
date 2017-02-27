@@ -27,8 +27,8 @@ class DatabaseParser {
 			throw new DatabaseFieldMissingException('stack', $data);
 		$database->setStack($data['stack']);
 
-		if(array_key_exists('restore', $data))
-			$database->setBackupData($data['restore']);
+		if(array_key_exists('backup', $data))
+			$database->setBackupData($data['backup']);
 
 		return $database;
 	}
