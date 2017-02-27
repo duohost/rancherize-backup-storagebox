@@ -21,7 +21,7 @@ class BackupRestoreCommand extends Command {
 	 */
 	protected function configure() {
 		$this
-			->setName('debug:restore')
+			->setName('backup:restore')
 			->setDescription('restore a previously created backup')
 			->setHelp('Clones the database service with a fresh named volume for /var/lib/mysql, then populates this named volume with the backup given as [backup].')
 			->addArgument('environment', InputArgument::REQUIRED, 'The environment for which the backup should be restored')
@@ -32,7 +32,7 @@ class BackupRestoreCommand extends Command {
 	/**
 	 * @param InputInterface $input
 	 * @param OutputInterface $output
-	 * @return int|null|void
+	 * @return int|null
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output) {
 
