@@ -5,6 +5,7 @@ use Rancherize\Configuration\Configurable;
 use Rancherize\Configuration\Configuration;
 use Rancherize\Configuration\Traits\EnvironmentConfigurationTrait;
 use RancherizeBackupStoragebox\Backup\Backup;
+use RancherizeBackupStoragebox\Backup\Exceptions\BackupException;
 use RancherizeBackupStoragebox\Backup\Factory\BackupMethodFactory;
 use RancherizeBackupStoragebox\Database\Repository\DatabaseRepository;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -96,12 +97,12 @@ class StorageboxService {
 
 	/**
 	 * @param string $environment
-	 * @param string $backup
+	 * @param string $backupKey
 	 * @param Configurable|Configuration $configuration
 	 * @param InputInterface $input
 	 * @param OutputInterface $output
 	 */
-	public function restore(string $environment, string $backup, Configurable $configuration, InputInterface $input, OutputInterface $output) {
+	public function restore(string $environment, string $backupKey, Configurable $configuration, InputInterface $input, OutputInterface $output) {
 		$environmentConfig = $this->environmentConfig($configuration, $environment);
 		$globalDatabaseName = $environmentConfig->get('database.global', null);
 
@@ -125,15 +126,25 @@ class StorageboxService {
 		$method->setConfiguration($configuration);
 		$backups = $method->list();
 
-		if(!array_key_exists($backup, $backups)) {
-			$output->writeln("Backup $backup does not exist in the backup list returned by the backup method $backupMethod.");
-			return;
-		}
-		$backupName = $backups[$backup]->getName();
+		$backup = $this->assertBackupExists($backupKey, $backups);
+		$backupName = $backup->getName();
 
-		$output->writeln("Restoring Backup $backup => $backupName using $backupMethod.");
+		$output->writeln("Restoring Backup $backupKey => $backupName using $backupMethod.");
 		$method->setQuestionHelper($this->questionHelper);
-		$method->restore($environment, $database, $backup, $input, $output);
+		$method->restore($environment, $database, $backupKey, $input, $output);
+	}
+
+	/**
+	 * @param string $backupKey
+	 * @param Backup[] $backups
+	 */
+	private function assertBackupExists($backupKey, $backups) {
+		foreach($backups as $backup) {
+			if($backup->getKey() === $backupKey)
+				return $backup;
+		}
+
+		throw new BackupException("Backup $backupKey does not exist in the List of backups.");
 	}
 
 }
