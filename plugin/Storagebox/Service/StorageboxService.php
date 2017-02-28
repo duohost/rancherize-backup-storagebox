@@ -88,6 +88,7 @@ class StorageboxService {
 		$method->setConfiguration($configuration);
 
 		$backups = $method->list();
+		ksort($backups);
 		foreach($backups as $backup) {
 			$key = $backup->getKey();
 			$name = $backup->getName();
@@ -137,7 +138,10 @@ class StorageboxService {
 			return;
 		}
 
-		var_dump($service);
+		if( !array_key_exists('environment', $service) ) {
+			$output->writeln("No environment set for ${databaseStack}");
+			return;
+		}
 	}
 
 }
