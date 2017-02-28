@@ -141,7 +141,7 @@ class StorageboxMethod implements BackupMethod {
 			if($collector instanceof  RequiresQuestionHelper)
 				$collector->setQuestionHelper($this->questionHelper);
 
-			$collector->collect($input, $output, $database);
+			$collector->collect($input, $output, $data);
 		}
 
 		var_dump($data);
