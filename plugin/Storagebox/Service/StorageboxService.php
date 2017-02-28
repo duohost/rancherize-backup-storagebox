@@ -90,7 +90,7 @@ class StorageboxService {
 
 		$backups = $method->list();
 		usort($backups, function(Backup $a, Backup $b) {
-			return strcmp($a, $b);
+			return strcmp($a->getKey(), $b->getKey());
 		});
 		foreach($backups as $backup) {
 			$key = $backup->getKey();
