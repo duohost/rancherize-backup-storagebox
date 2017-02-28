@@ -52,7 +52,7 @@ class RootPasswordCollector implements InformationCollector, RequiresQuestionHel
 
 			try {
 				$rootPassword = $this->byKeyService->byKey('MYSQL_ROOT_PASSWORD', $environment);
-				$rootPasswords[] = $rootPassword;
+				$rootPasswords[] = $rootPassword[1];
 			} catch(KeyNotFoundException $e) {
 			}
 		}

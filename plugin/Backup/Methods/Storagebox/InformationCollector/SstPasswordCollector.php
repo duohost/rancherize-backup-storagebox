@@ -50,7 +50,7 @@ class SstPasswordCollector implements InformationCollector, RequiresQuestionHelp
 
 			try {
 				$sstPassword = $this->byKeyService->byKey('PXC_SST_PASSWORD', $environment);
-				$sstPasswords[] = $sstPassword;
+				$sstPasswords[] = $sstPassword[1];
 			} catch(KeyNotFoundException $e) {
 			}
 		}
