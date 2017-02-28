@@ -38,7 +38,7 @@ class NamedVolumeCollector implements InformationCollector {
 	 */
 	private function getMysqlVolume(array $volumes) {
 		foreach ($volumes as $volume) {
-			$volumeData = explode($volume, ':');
+			$volumeData = explode(':', $volume);
 			if (count($volumeData) < 2)
 				continue;
 
