@@ -10,6 +10,7 @@ use Rancherize\Docker\DockerComposeParser\NotFoundException;
 use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
 use Rancherize\Docker\DockerComposerVersionizer;
 use Rancherize\RancherAccess\RancherAccessService;
+use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\Factory\BackupMethodFactory;
 use RancherizeBackupStoragebox\Database\Repository\DatabaseRepository;
 use Symfony\Component\Console\Input\InputInterface;
@@ -88,7 +89,9 @@ class StorageboxService {
 		$method->setConfiguration($configuration);
 
 		$backups = $method->list();
-		ksort($backups);
+		usort($backups, function(Backup $a, Backup $b) {
+			return strcmp($a, $b);
+		});
 		foreach($backups as $backup) {
 			$key = $backup->getKey();
 			$name = $backup->getName();
