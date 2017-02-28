@@ -1,18 +1,13 @@
 <?php namespace RancherizeBackupStoragebox\Storagebox\Service;
 
 use Rancherize\Commands\Traits\IoTrait;
-use Rancherize\Commands\Traits\RancherTrait;
 use Rancherize\Configuration\Configurable;
 use Rancherize\Configuration\Configuration;
-use Rancherize\Configuration\PrefixConfigurableDecorator;
 use Rancherize\Configuration\Traits\EnvironmentConfigurationTrait;
-use Rancherize\Docker\DockerComposeParser\NotFoundException;
-use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
-use Rancherize\Docker\DockerComposerVersionizer;
-use Rancherize\RancherAccess\RancherAccessService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\Factory\BackupMethodFactory;
 use RancherizeBackupStoragebox\Database\Repository\DatabaseRepository;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -23,7 +18,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class StorageboxService {
 
 	use IoTrait;
-	use RancherTrait;
 	use EnvironmentConfigurationTrait;
 
 	/**
@@ -34,28 +28,28 @@ class StorageboxService {
 	 * @var BackupMethodFactory
 	 */
 	private $methodFactory;
+
 	/**
-	 * @var DockerComposeReader
+	 * @var QuestionHelper
 	 */
-	private $composeReader;
-	/**
-	 * @var DockerComposerVersionizer
-	 */
-	private $composerVersionizer;
+	private $questionHelper;
 
 	/**
 	 * StorageboxService constructor.
 	 * @param DatabaseRepository $databaseRepository
 	 * @param BackupMethodFactory $methodFactory
-	 * @param DockerComposeReader $composeReader
-	 * @param DockerComposerVersionizer $composerVersionizer
 	 */
-	public function __construct(DatabaseRepository $databaseRepository, BackupMethodFactory $methodFactory,
-							DockerComposeReader $composeReader, DockerComposerVersionizer $composerVersionizer) {
+	public function __construct(DatabaseRepository $databaseRepository, BackupMethodFactory $methodFactory
+	) {
 		$this->databaseRepository = $databaseRepository;
 		$this->methodFactory = $methodFactory;
-		$this->composeReader = $composeReader;
-		$this->composerVersionizer = $composerVersionizer;
+	}
+
+	/**
+	 * @param QuestionHelper $questionHelper
+	 */
+	public function setQuestionHelper(QuestionHelper $questionHelper) {
+		$this->questionHelper = $questionHelper;
 	}
 
 	/**
@@ -123,28 +117,23 @@ class StorageboxService {
 			return;
 		}
 
-		$rancherService = $this->getRancher();
-		$rancherConfiguration = new RancherAccessService($configuration);
-		$rancherAccount = $rancherConfiguration->getAccount( $environmentConfig->get('rancher.account') );
-		$rancherService->setAccount($rancherAccount);
+		$backupData = $database->getBackupData();
+		$backupMethod = $backupData['method'];
 
-		$databaseStack = $database->getStack();
-		$databaseService = $database->getService();
+		$output->writeln("Environment $environment uses restore method $backupMethod");
+		$method = $this->methodFactory->make($backupMethod, $backupData);
+		$method->setConfiguration($configuration);
+		$backups = $method->list();
 
-		list($currentConfig, $currentRancherize) = $rancherService->retrieveConfig($databaseStack);
-		$composeData = $this->composeReader->read($currentConfig);
-		$composeVersion = $this->composerVersionizer->parse($composeData);
-		try {
-			$service = $composeVersion->getService($databaseService, $composeData);
-		} catch(NotFoundException $e) {
-			$output->writeln("Restore failed: stack ${databaseService} was not found within ${databaseStack}");
+		if(!array_key_exists($backup, $backups)) {
+			$output->writeln("Backup $backup does not exist in the backup list returned by the backup method $backupMethod.");
 			return;
 		}
+		$backupName = $backups[$backup]->getName();
 
-		if( !array_key_exists('environment', $service) ) {
-			$output->writeln("No environment set for ${databaseStack}");
-			return;
-		}
+		$output->writeln("Restoring Backup $backup => $backupName using $backupMethod.");
+		$method->setQuestionHelper($this->questionHelper);
+		$method->restore($environment, $database, $backup, $input, $output);
 	}
 
 }

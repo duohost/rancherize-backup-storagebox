@@ -1,10 +1,32 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox;
 
+use Rancherize\Commands\Traits\RancherTrait;
 use Rancherize\Configuration\Configuration;
+use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
+use Rancherize\Docker\DockerComposerVersionizer;
+use Rancherize\General\Exceptions\KeyNotFoundException;
+use Rancherize\General\Services\ByKeyService;
+use Rancherize\RancherAccess\RancherAccessService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
+use RancherizeBackupStoragebox\Backup\Exceptions\ConfigurationNotFoundException;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeVersionCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\EnvironmentConfigCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\InformationCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RancherAccountCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RequiresQuestionHelper;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RootPasswordCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\ServiceCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\SidekickCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\SstPasswordCollector;
+use RancherizeBackupStoragebox\Database\Database;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\AccessMethodFactory;
 use RancherizeBackupStoragebox\Storagebox\Repository\StorageboxRepository;
+use Symfony\Component\Console\Helper\QuestionHelper;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 
 /**
  * Class StorageboxMethod
@@ -26,13 +48,46 @@ class StorageboxMethod implements BackupMethod {
 	private $methodFactory;
 
 	/**
+	 * @var ByKeyService
+	 */
+	private $byKeyService;
+
+	/**
+	 * @var QuestionHelper
+	 */
+	private $questionHelper;
+
+	/**
+	 * @var InformationCollector[]
+	 */
+	private $collectors = [];
+
+	/**
 	 * StorageboxMethod constructor.
 	 * @param StorageboxRepository $repository
 	 * @param AccessMethodFactory $methodFactory
+	 * @param DockerComposeReader $composeReader
+	 * @param DockerComposerVersionizer $composerVersionizer
+	 * @param ByKeyService $byKeyService
 	 */
-	public function __construct(StorageboxRepository $repository, AccessMethodFactory $methodFactory) {
+	public function __construct(StorageboxRepository $repository, AccessMethodFactory $methodFactory,
+							DockerComposeReader $composeReader, DockerComposerVersionizer $composerVersionizer,
+							ByKeyService $byKeyService
+	) {
 		$this->repository = $repository;
 		$this->methodFactory = $methodFactory;
+		$this->byKeyService = $byKeyService;
+
+		$this->collectors = [
+			new EnvironmentConfigCollector(),
+			new RancherAccountCollector(),
+			new DockerComposeCollector($composeReader),
+			new DockerComposeVersionCollector($composerVersionizer),
+			new ServiceCollector(),
+			new SidekickCollector(),
+			new RootPasswordCollector($byKeyService),
+			new SstPasswordCollector($byKeyService),
+		];
 	}
 
 	/**
@@ -65,5 +120,38 @@ class StorageboxMethod implements BackupMethod {
 	 */
 	public function setStorageBox(string $storageBox) {
 		$this->storageBox = $storageBox;
+	}
+
+	/**
+	 * @param string $environment
+	 * @param Database $database
+	 * @param string $backup
+	 * @param InputInterface $input
+	 * @param OutputInterface $output
+	 */
+	public function restore(string $environment, Database $database, string $backup, InputInterface $input, OutputInterface $output) {
+
+		$data = new StorageboxData();
+		$data->setEnvironmentName($environment);
+		$data->setDatabase($database);
+		$data->setBackupKey($backup);
+		$data->setConfiguration($this->configuration);
+
+		foreach ($this->collectors as $collector) {
+			if($collector instanceof  RequiresQuestionHelper)
+				$collector->setQuestionHelper($this->questionHelper);
+
+			$collector->collect($input, $output, $database);
+		}
+
+		var_dump($data);
+	}
+
+	/**
+	 * @param $questionHelper
+	 * @return mixed
+	 */
+	public function setQuestionHelper($questionHelper) {
+		$this->questionHelper = $questionHelper;
 	}
 }
