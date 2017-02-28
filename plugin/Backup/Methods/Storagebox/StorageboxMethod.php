@@ -1,19 +1,16 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox;
 
-use Rancherize\Commands\Traits\RancherTrait;
 use Rancherize\Configuration\Configuration;
 use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
 use Rancherize\Docker\DockerComposerVersionizer;
-use Rancherize\General\Exceptions\KeyNotFoundException;
 use Rancherize\General\Services\ByKeyService;
-use Rancherize\RancherAccess\RancherAccessService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
-use RancherizeBackupStoragebox\Backup\Exceptions\ConfigurationNotFoundException;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeVersionCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\EnvironmentConfigCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\InformationCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\NamedVolumeCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RancherAccountCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RequiresQuestionHelper;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RootPasswordCollector;
@@ -26,7 +23,6 @@ use RancherizeBackupStoragebox\Storagebox\Repository\StorageboxRepository;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 
 /**
  * Class StorageboxMethod
@@ -87,6 +83,7 @@ class StorageboxMethod implements BackupMethod {
 			new SidekickCollector(),
 			new RootPasswordCollector($byKeyService),
 			new SstPasswordCollector($byKeyService),
+			new NamedVolumeCollector(),
 		];
 	}
 
@@ -149,7 +146,6 @@ class StorageboxMethod implements BackupMethod {
 
 	/**
 	 * @param $questionHelper
-	 * @return mixed
 	 */
 	public function setQuestionHelper($questionHelper) {
 		$this->questionHelper = $questionHelper;

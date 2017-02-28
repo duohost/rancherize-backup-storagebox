@@ -12,7 +12,6 @@ interface BackupMethod {
 
 	/**
 	 * @param $questionHelper
-	 * @return mixed
 	 */
 	function setQuestionHelper($questionHelper);
 

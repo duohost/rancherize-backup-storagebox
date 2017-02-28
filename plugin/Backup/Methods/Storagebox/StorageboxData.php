@@ -72,6 +72,11 @@ class StorageboxData {
 	protected $sstPassword;
 
 	/**
+	 * @var string
+	 */
+	protected $mysqlVolumeName;
+
+	/**
 	 * @return string
 	 */
 	public function getEnvironmentName(): string {
@@ -237,5 +242,19 @@ class StorageboxData {
 	 */
 	public function setSstPassword(string $sstPassword) {
 		$this->sstPassword = $sstPassword;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getMysqlVolumeName(): string {
+		return $this->mysqlVolumeName;
+	}
+
+	/**
+	 * @param string $mysqlVolumeName
+	 */
+	public function setMysqlVolumeName(string $mysqlVolumeName) {
+		$this->mysqlVolumeName = $mysqlVolumeName;
 	}
 }
