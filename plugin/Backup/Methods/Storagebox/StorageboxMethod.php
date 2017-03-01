@@ -14,6 +14,7 @@ use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FilterSide
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\RequiresReplacementRegex;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ServiceNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\SidekickNameModifier;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\VolumeNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\VolumesFromNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeVersionCollector;
@@ -95,7 +96,8 @@ class StorageboxMethod implements BackupMethod {
 	public function __construct(StorageboxRepository $repository, AccessMethodFactory $methodFactory,
 							DockerComposeReader $composeReader, RancherComposeReader $rancherReader,
 							DockerComposerVersionizer $composerVersionizer,
-							ByKeyService $byKeyService, BuildService $buildService, RancherService $rancherService
+							ByKeyService $byKeyService, BuildService $buildService, RancherService $rancherService,
+							NameIsPathChecker $nameIsPathChecker
 	) {
 		$this->repository = $repository;
 		$this->methodFactory = $methodFactory;
@@ -118,6 +120,7 @@ class StorageboxMethod implements BackupMethod {
 			new ServiceNameModifier(),
 			new SidekickNameModifier(),
 			new VolumesFromNameModifier(),
+			new VolumeNameModifier($nameIsPathChecker)
 		];
 		$this->buildService = $buildService;
 		$this->rancherService = $rancherService;
@@ -203,7 +206,7 @@ class StorageboxMethod implements BackupMethod {
 		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
 		$this->buildService->createRancherCompose($rancherFileContent);
 
-		$this->rancherService->start(getcwd().'/.rancherize', $data->getDatabase()->getStack());
+		//$this->rancherService->start(getcwd().'/.rancherize', $data->getDatabase()->getStack());
 	}
 
 	/**

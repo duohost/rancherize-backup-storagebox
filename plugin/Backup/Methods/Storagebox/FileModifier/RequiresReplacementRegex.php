@@ -11,7 +11,6 @@ interface RequiresReplacementRegex {
 	 *
 	 * @param string $regex
 	 * @param string $replacement
-	 * @return
 	 */
 	function setReplacementRegex(string $regex, string $replacement);
 }
