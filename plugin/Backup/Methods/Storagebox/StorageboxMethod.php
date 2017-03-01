@@ -5,6 +5,7 @@ use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
 use Rancherize\Docker\DockerComposerVersionizer;
 use Rancherize\Docker\RancherComposeReader\RancherComposeReader;
 use Rancherize\General\Services\ByKeyService;
+use Rancherize\General\Services\NameIsPathChecker;
 use Rancherize\RancherAccess\RancherService;
 use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
@@ -92,6 +93,7 @@ class StorageboxMethod implements BackupMethod {
 	 * @param ByKeyService $byKeyService
 	 * @param BuildService $buildService
 	 * @param RancherService $rancherService
+	 * @param NameIsPathChecker $nameIsPathChecker
 	 */
 	public function __construct(StorageboxRepository $repository, AccessMethodFactory $methodFactory,
 							DockerComposeReader $composeReader, RancherComposeReader $rancherReader,
