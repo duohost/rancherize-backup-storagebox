@@ -17,15 +17,16 @@ class VolumesFromNameModifier implements FileModifier, RequiresReplacementRegex 
 	private $replacement;
 
 	/**
-	 * @param array $file
+	 * @param array $dockerFile
+	 * @param array $rancherFile
 	 * @param $data
 	 */
-	public function modify(array &$file, $data) {
+	public function modify(array &$dockerFile, array &$rancherFile, $data) {
 
 		$regex = $this->regex;
 		$replacement = $this->replacement;
 
-		foreach($file['services'] as &$service) {
+		foreach($dockerFile['services'] as &$service) {
 			if( !array_key_exists('volumes_from', $service) )
 				continue;
 

@@ -6,8 +6,10 @@
  */
 interface FileModifier {
 	/**
-	 * @param array $file
+	 * @param array $dockerFile
+	 * @param array $rancherFile
 	 * @param $data
+	 * @return
 	 */
-	function modify(array &$file, $data);
+	function modify(array &$dockerFile, array &$rancherFile, $data);
 }

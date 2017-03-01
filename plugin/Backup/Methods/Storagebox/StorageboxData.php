@@ -47,6 +47,11 @@ class StorageboxData {
 	protected $composeData;
 
 	/**
+	 * @var array
+	 */
+	protected $rancherData;
+
+	/**
 	 * @var DockerComposeParserVersion
 	 */
 	protected $composeParser;
@@ -256,5 +261,21 @@ class StorageboxData {
 	 */
 	public function setMysqlVolumeName(string $mysqlVolumeName) {
 		$this->mysqlVolumeName = $mysqlVolumeName;
+	}
+
+	/**
+	 * return parsed rancher-compose.yml of the database stack
+	 *
+	 * @return array
+	 */
+	public function getRancherData(): array {
+		return $this->rancherData;
+	}
+
+	/**
+	 * @param array $rancherData
+	 */
+	public function setRancherData(array $rancherData) {
+		$this->rancherData = $rancherData;
 	}
 }

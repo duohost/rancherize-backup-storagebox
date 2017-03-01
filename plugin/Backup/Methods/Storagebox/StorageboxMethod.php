@@ -3,6 +3,7 @@
 use Rancherize\Configuration\Configuration;
 use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
 use Rancherize\Docker\DockerComposerVersionizer;
+use Rancherize\Docker\RancherComposeReader\RancherComposeReader;
 use Rancherize\General\Services\ByKeyService;
 use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
@@ -79,12 +80,14 @@ class StorageboxMethod implements BackupMethod {
 	 * @param StorageboxRepository $repository
 	 * @param AccessMethodFactory $methodFactory
 	 * @param DockerComposeReader $composeReader
+	 * @param RancherComposeReader $rancherReader
 	 * @param DockerComposerVersionizer $composerVersionizer
 	 * @param ByKeyService $byKeyService
 	 * @param BuildService $buildService
 	 */
 	public function __construct(StorageboxRepository $repository, AccessMethodFactory $methodFactory,
-							DockerComposeReader $composeReader, DockerComposerVersionizer $composerVersionizer,
+							DockerComposeReader $composeReader, RancherComposeReader $rancherReader,
+							DockerComposerVersionizer $composerVersionizer,
 							ByKeyService $byKeyService, BuildService $buildService
 	) {
 		$this->repository = $repository;
@@ -94,7 +97,7 @@ class StorageboxMethod implements BackupMethod {
 		$this->collectors = [
 			new EnvironmentConfigCollector(),
 			new RancherAccountCollector(),
-			new DockerComposeCollector($composeReader),
+			new DockerComposeCollector($composeReader, $rancherReader),
 			new DockerComposeVersionCollector($composerVersionizer),
 			new ServiceCollector(),
 			new SidekickCollector(),
@@ -165,13 +168,14 @@ class StorageboxMethod implements BackupMethod {
 			$collector->collect($input, $output, $data);
 		}
 
-		$file = [
+		$dockerCompose = [
 			'version' => '2',
 			'services' => array_merge(
 				[$data->getDatabase()->getService() => $data->getService()],
 				$data->getSidekicks()
 			)
 		];
+		$rancherCompose = $data->getRancherData();
 
 		// TODO: Allow to set as option. If not set: ask user
 		$regex = '~$~';
@@ -181,11 +185,14 @@ class StorageboxMethod implements BackupMethod {
 			if($modifier instanceof RequiresReplacementRegex)
 				$modifier->setReplacementRegex($regex, $replacement);
 
-			$modifier->modify($file, $data);
+			$modifier->modify($dockerCompose, $rancherCompose, $data);
 		}
 
-		$fileContent = Yaml::dump($file, 100, 2);
-		$this->buildService->createDockerCompose($fileContent);
+		$dockerFileContent = Yaml::dump($dockerCompose, 100, 2);
+		$this->buildService->createDockerCompose($dockerFileContent);
+
+		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
+		$this->buildService->createRancherCompose($rancherFileContent);
 	}
 
 	/**

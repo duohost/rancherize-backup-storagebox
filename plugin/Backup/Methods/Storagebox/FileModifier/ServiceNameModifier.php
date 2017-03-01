@@ -17,10 +17,11 @@ class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
 	private $replacement;
 
 	/**
-	 * @param array $file
+	 * @param array $dockerFile
+	 * @param array $rancherFile
 	 * @param $data
 	 */
-	public function modify(array &$file, $data) {
+	public function modify(array &$dockerFile, array &$rancherFile, $data) {
 
 		$regex = $this->regex;
 		$replacement = $this->replacement;
@@ -29,35 +30,24 @@ class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
 		/**
 		 *
 		 */
-		foreach($file['services'] as $serviceName => $service) {
+		foreach($dockerFile['services'] as $serviceName => $service) {
 
 			$newName = preg_replace($regex, $replacement, $serviceName);
 			$renamedServices[$newName] = $service;
 
 		}
 
-		foreach($renamedServices as &$service) {
-			if( !array_key_exists('labels', $service) )
-				continue;
+		/**
+		 *
+		 */
+		foreach($rancherFile['services'] as $serviceName => $service) {
 
-			$labels = &$service['labels'];
-			if( !array_key_exists('io.rancher.sidekicks', $labels))
-				continue;
-
-			$sidekicksString = $labels['io.rancher.sidekicks'];
-			$sidekicks = explode(',', $sidekicksString);
-
-			$renamedSidekicks = [];
-			foreach($sidekicks as $sidekick) {
-				$renamedSidekick = preg_replace($regex, $replacement, $sidekick);
-				$renamedSidekicks[] = $renamedSidekick;
-			}
-
-			$labels['io.rancher.sidekicks'] = implode(',', $renamedSidekicks);
+			$newName = preg_replace($regex, $replacement, $serviceName);
+			$renamedServices[$newName] = $service;
 
 		}
 
-		$file['services'] = $renamedServices;
+		$dockerFile['services'] = $renamedServices;
 	}
 
 	/**

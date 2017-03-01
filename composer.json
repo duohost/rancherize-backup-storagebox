@@ -3,6 +3,12 @@
     "description": "Rancherize plugin adding backup commands for use witha a hetzner storagebox",
     "type": "project",
     "license": "MIT",
+  "repositories": [
+    {
+      "type":"vcs",
+      "url":"/home/sven/workspace/rancherize"
+    }
+  ],
 	 "autoload":{
 		"psr-4": {
 			"RancherizeBackupStoragebox\\": "plugin/"
