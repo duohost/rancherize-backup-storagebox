@@ -13,6 +13,7 @@ use RancherizeBackupStoragebox\Backup\BackupMethod;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FileModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FilterSidekicksModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\RequiresReplacementRegex;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ScaleDownModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ServiceNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\SidekickNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\VolumeNameModifier;
@@ -129,6 +130,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			new ServiceNameModifier(),
 			new SidekickNameModifier(),
 			new VolumesFromNameModifier(),
+			new ScaleDownModifier(),
 			new VolumeNameModifier($nameIsPathChecker)
 		];
 		$this->buildService = $buildService;
