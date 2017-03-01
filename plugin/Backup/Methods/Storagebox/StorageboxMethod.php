@@ -225,6 +225,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			->setOutput( $output )
 			->setProcessHelper( $this->processHelper );
 		$this->rancherService->start(getcwd().'/.rancherize', $data->getDatabase()->getStack());
+		$this->rancherService->stop(getcwd().'/.rancherize', $data->getDatabase()->getStack());
 	}
 
 	/**
