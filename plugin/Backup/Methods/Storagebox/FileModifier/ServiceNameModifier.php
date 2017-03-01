@@ -40,14 +40,15 @@ class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
 		/**
 		 *
 		 */
+		$renamedRancherServices = [];
 		foreach($rancherFile['services'] as $serviceName => $service) {
 
 			$newName = preg_replace($regex, $replacement, $serviceName);
-			$renamedServices[$newName] = $service;
+			$renamedRancherServices[$newName] = $service;
 
 		}
 
-		$dockerFile['services'] = $renamedServices;
+		$rancherFile['services'] = $renamedRancherServices;
 	}
 
 	/**
