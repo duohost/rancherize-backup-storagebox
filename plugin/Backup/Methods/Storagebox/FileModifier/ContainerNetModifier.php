@@ -36,12 +36,12 @@ class ContainerNetModifier implements FileModifier, RequiresReplacementRegex {
 			$targetMode = 'container:';
 
 
-			$networkModeIsContainer = substr($networkMode, 0, strlen($targetMode) === $targetMode);
+			$networkModeIsContainer = ( substr($networkMode, 0, strlen($targetMode)) === $targetMode );
 			if( !$networkModeIsContainer )
 				continue;
 
 			list($mode, $targetContainer) = explode(':', $networkMode);
-			$renamedTarget = preg_replace($this->regex, $this->replacement, $targetContainer);
+			$renamedTarget = preg_replace($regex, $replacement, $targetContainer);
 
 
 			$service['network_mode'] = $mode.':'.$renamedTarget;
