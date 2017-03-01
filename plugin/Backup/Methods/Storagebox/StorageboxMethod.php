@@ -242,6 +242,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->rancherService->stop($workDirectory, $data->getDatabase()->getStack());
 
 		$clearService = new Service();
+		$clearService->setName($data->getNewServiceName().'-clear');
 		$clearService->setImage('ipunktbs/xtrabackup:0.2.1');
 		$clearService->setCommand('clear yes');
 		$stackName = $data->getDatabase()->getStack();
