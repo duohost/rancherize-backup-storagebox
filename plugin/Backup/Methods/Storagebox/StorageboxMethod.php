@@ -23,14 +23,16 @@ use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\En
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\InformationCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\NamedVolumeCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RancherAccountCollector;
-use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RequiresQuestionHelper;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RootPasswordCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\ServiceCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\SidekickCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\SstPasswordCollector;
 use RancherizeBackupStoragebox\Database\Database;
+use RancherizeBackupStoragebox\General\Helper\RequiresProcessHelper;
+use RancherizeBackupStoragebox\General\Helper\RequiresQuestionHelper;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\AccessMethodFactory;
 use RancherizeBackupStoragebox\Storagebox\Repository\StorageboxRepository;
+use Symfony\Component\Console\Helper\ProcessHelper;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -40,7 +42,7 @@ use Symfony\Component\Yaml\Yaml;
  * Class StorageboxMethod
  * @package RancherizeBackupStoragebox\Backup\Methods\Storagebox
  */
-class StorageboxMethod implements BackupMethod {
+class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, RequiresProcessHelper {
 
 	/**
 	 * @var Configuration
@@ -82,6 +84,11 @@ class StorageboxMethod implements BackupMethod {
 	 * @var RancherService
 	 */
 	private $rancherService;
+
+	/**
+	 * @var ProcessHelper
+	 */
+	private $processHelper;
 
 	/**
 	 * StorageboxMethod constructor.
@@ -208,13 +215,23 @@ class StorageboxMethod implements BackupMethod {
 		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
 		$this->buildService->createRancherCompose($rancherFileContent);
 
+		$this->rancherService->setAccount( $data->getRancherAccount() )
+			->setOutput( $output )
+			->setProcessHelper( $this->processHelper );
 		$this->rancherService->start(getcwd().'/.rancherize', $data->getDatabase()->getStack());
 	}
 
 	/**
 	 * @param $questionHelper
 	 */
-	public function setQuestionHelper($questionHelper) {
+	public function setQuestionHelper(QuestionHelper $questionHelper) {
 		$this->questionHelper = $questionHelper;
+	}
+
+	/**
+	 * @param ProcessHelper $processHelper
+	 */
+	public function setProcessHelper(ProcessHelper $processHelper) {
+		$this->processHelper = $processHelper;
 	}
 }

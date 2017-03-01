@@ -11,11 +11,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 interface BackupMethod {
 
 	/**
-	 * @param $questionHelper
-	 */
-	function setQuestionHelper($questionHelper);
-
-	/**
 	 * @param Configuration $configuration
 	 */
 	function setConfiguration(Configuration $configuration);

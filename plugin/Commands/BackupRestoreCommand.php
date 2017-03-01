@@ -42,6 +42,7 @@ class BackupRestoreCommand extends Command {
 		$configuration = $this->loadConfiguration();
 		$storageboxService = $this->getStorageboxService();
 		$storageboxService->setQuestionHelper( $this->getHelper('question') );
+		$storageboxService->setProcessHelper( $this->getHelper('process') );
 		$storageboxService->restore($environment, $backup, $configuration, $input, $output);
 
 		return 0;

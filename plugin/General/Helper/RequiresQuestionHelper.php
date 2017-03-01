@@ -1,4 +1,5 @@
-<?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector;
+<?php namespace RancherizeBackupStoragebox\General\Helper;
+
 use Symfony\Component\Console\Helper\QuestionHelper;
 
 /**

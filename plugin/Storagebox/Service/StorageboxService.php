@@ -8,6 +8,9 @@ use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\Exceptions\BackupException;
 use RancherizeBackupStoragebox\Backup\Factory\BackupMethodFactory;
 use RancherizeBackupStoragebox\Database\Repository\DatabaseRepository;
+use RancherizeBackupStoragebox\General\Helper\RequiresProcessHelper;
+use RancherizeBackupStoragebox\General\Helper\RequiresQuestionHelper;
+use Symfony\Component\Console\Helper\ProcessHelper;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -34,6 +37,11 @@ class StorageboxService {
 	 * @var QuestionHelper
 	 */
 	private $questionHelper;
+
+	/**
+	 * @var ProcessHelper
+	 */
+	private $processHelper;
 
 	/**
 	 * StorageboxService constructor.
@@ -130,7 +138,12 @@ class StorageboxService {
 		$backupName = $backup->getName();
 
 		$output->writeln("Restoring Backup $backupKey => $backupName using $backupMethod.");
-		$method->setQuestionHelper($this->questionHelper);
+
+		if($method instanceof RequiresQuestionHelper)
+			$method->setQuestionHelper($this->questionHelper);
+		if($method instanceof RequiresProcessHelper)
+			$method->setProcessHelper($this->processHelper);
+
 		$method->restore($environment, $database, $backupKey, $input, $output);
 	}
 
@@ -145,6 +158,13 @@ class StorageboxService {
 		}
 
 		throw new BackupException("Backup $backupKey does not exist in the List of backups.");
+	}
+
+	/**
+	 * @param ProcessHelper $processHelper
+	 */
+	public function setProcessHelper(ProcessHelper $processHelper) {
+		$this->processHelper = $processHelper;
 	}
 
 }

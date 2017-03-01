@@ -3,6 +3,7 @@ use Rancherize\General\Exceptions\KeyNotFoundException;
 use Rancherize\General\Services\ByKeyService;
 use RancherizeBackupStoragebox\Backup\Exceptions\ConfigurationNotFoundException;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\StorageboxData;
+use RancherizeBackupStoragebox\General\Helper\RequiresQuestionHelper;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,7 +36,6 @@ class RootPasswordCollector implements InformationCollector, RequiresQuestionHel
 	 * @param InputInterface $input
 	 * @param OutputInterface $output
 	 * @param StorageboxData $data
-	 * @return
 	 */
 	public function collect(InputInterface $input, OutputInterface $output, &$data) {
 		$sidekicks = $data->getSidekicks();
