@@ -184,7 +184,7 @@ class StorageboxMethod implements BackupMethod {
 			$modifier->modify($file, $data);
 		}
 
-		$fileContent = Yaml::dump($file);
+		$fileContent = Yaml::dump($file, 100, 2);
 		$this->buildService->createDockerCompose($fileContent);
 	}
 
