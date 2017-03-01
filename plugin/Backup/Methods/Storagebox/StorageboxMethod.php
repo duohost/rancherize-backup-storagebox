@@ -5,6 +5,7 @@ use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
 use Rancherize\Docker\DockerComposerVersionizer;
 use Rancherize\Docker\RancherComposeReader\RancherComposeReader;
 use Rancherize\General\Services\ByKeyService;
+use Rancherize\RancherAccess\RancherService;
 use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
@@ -75,6 +76,10 @@ class StorageboxMethod implements BackupMethod {
 	 * @var BuildService
 	 */
 	private $buildService;
+	/**
+	 * @var RancherService
+	 */
+	private $rancherService;
 
 	/**
 	 * StorageboxMethod constructor.
@@ -85,11 +90,12 @@ class StorageboxMethod implements BackupMethod {
 	 * @param DockerComposerVersionizer $composerVersionizer
 	 * @param ByKeyService $byKeyService
 	 * @param BuildService $buildService
+	 * @param RancherService $rancherService
 	 */
 	public function __construct(StorageboxRepository $repository, AccessMethodFactory $methodFactory,
 							DockerComposeReader $composeReader, RancherComposeReader $rancherReader,
 							DockerComposerVersionizer $composerVersionizer,
-							ByKeyService $byKeyService, BuildService $buildService
+							ByKeyService $byKeyService, BuildService $buildService, RancherService $rancherService
 	) {
 		$this->repository = $repository;
 		$this->methodFactory = $methodFactory;
@@ -114,6 +120,7 @@ class StorageboxMethod implements BackupMethod {
 			new VolumesFromNameModifier(),
 		];
 		$this->buildService = $buildService;
+		$this->rancherService = $rancherService;
 	}
 
 	/**
@@ -195,6 +202,8 @@ class StorageboxMethod implements BackupMethod {
 
 		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
 		$this->buildService->createRancherCompose($rancherFileContent);
+
+		$this->rancherService->start(getcwd().'/.rancherize', $data->getDatabase()->getStack());
 	}
 
 	/**
