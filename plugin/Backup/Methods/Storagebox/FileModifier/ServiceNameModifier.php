@@ -36,6 +36,7 @@ class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
 			$renamedServices[$newName] = $service;
 
 		}
+		$dockerFile['services'] = $renamedServices;
 
 		/**
 		 *
