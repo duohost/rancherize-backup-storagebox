@@ -9,6 +9,7 @@ use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FileModifier;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FilterSidekicksModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\RequiresReplacementRegex;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ServiceNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\SidekickNameModifier;
@@ -107,6 +108,7 @@ class StorageboxMethod implements BackupMethod {
 		];
 
 		$this->modifiers = [
+			new FilterSidekicksModifier(),
 			new ServiceNameModifier(),
 			new SidekickNameModifier(),
 			new VolumesFromNameModifier(),
