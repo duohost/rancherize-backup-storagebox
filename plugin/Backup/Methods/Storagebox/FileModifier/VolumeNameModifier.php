@@ -49,7 +49,7 @@ class VolumeNameModifier implements FileModifier, RequiresReplacementRegex {
 	public function modify(array &$dockerFile, array &$rancherFile, $data) {
 		$composeParser = $data->getComposeParser();
 
-		foreach($dockerFile['service'] as &$service) {
+		foreach($dockerFile['services'] as &$service) {
 			if(!array_key_exists('volumes', $service))
 				continue;
 
