@@ -28,6 +28,7 @@ use RancherizeBackupStoragebox\Storagebox\Repository\StorageboxRepository;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Class StorageboxMethod
@@ -176,7 +177,9 @@ class StorageboxMethod implements BackupMethod {
 			$modifier->modify($file, $data);
 		}
 
-		var_dump( $file );
+		$fileContent = Yaml::dump($file);
+		$filePath = getcwd().'/.rancherize/docker-compose.yml';
+		file_put_contents($filePath, $fileContent);
 	}
 
 	/**
