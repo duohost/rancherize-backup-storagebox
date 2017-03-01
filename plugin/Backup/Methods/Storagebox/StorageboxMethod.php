@@ -17,6 +17,7 @@ use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ScaleDownM
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ServiceNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\SidekickNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\VolumeNameModifier;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\VolumesEntryModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\VolumesFromNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeVersionCollector;
@@ -123,6 +124,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			new RootPasswordCollector($byKeyService),
 			new SstPasswordCollector($byKeyService),
 			new NamedVolumeCollector(),
+			new VolumesEntryModifier(),
 		];
 
 		$this->modifiers = [
