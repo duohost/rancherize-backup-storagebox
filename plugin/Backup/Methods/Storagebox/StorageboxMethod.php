@@ -162,8 +162,8 @@ class StorageboxMethod implements BackupMethod {
 		];
 
 		// TODO: Allow to set as option. If not set: ask user
-		$regex = '$';
-		$replacement = '-backup';
+		$regex = '~$~';
+		$replacement = '-backup$';
 
 		foreach($this->modifiers as $modifier) {
 			if($modifier instanceof RequiresReplacementRegex)
