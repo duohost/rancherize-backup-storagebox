@@ -9,6 +9,8 @@ use RancherizeBackupStoragebox\Backup\BackupMethod;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FileModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\RequiresReplacementRegex;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ServiceNameModifier;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\SidekickNameModifier;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\VolumesFromNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeVersionCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\EnvironmentConfigCollector;
@@ -96,6 +98,8 @@ class StorageboxMethod implements BackupMethod {
 
 		$this->modifiers = [
 			new ServiceNameModifier(),
+			new SidekickNameModifier(),
+			new VolumesFromNameModifier(),
 		];
 	}
 

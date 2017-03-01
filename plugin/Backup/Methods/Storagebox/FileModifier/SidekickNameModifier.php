@@ -1,10 +1,10 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier;
 
 /**
- * Class ServiceNameModifier
+ * Class SidekickNameModifier
  * @package RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier
  */
-class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
+class SidekickNameModifier implements FileModifier, RequiresReplacementRegex {
 
 	/**
 	 * @var string
@@ -25,18 +25,7 @@ class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
 		$regex = $this->regex;
 		$replacement = $this->replacement;
 
-		$renamedServices = [];
-		/**
-		 *
-		 */
-		foreach($file['services'] as $serviceName => $service) {
-
-			$newName = preg_replace($regex, $replacement, $serviceName);
-			$renamedServices[$newName] = $service;
-
-		}
-
-		foreach($renamedServices as &$service) {
+		foreach($data['services'] as &$service) {
 			if( !array_key_exists('labels', $service) )
 				continue;
 
@@ -56,8 +45,6 @@ class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
 			$labels['io.rancher.sidekicks'] = implode(',', $renamedSidekicks);
 
 		}
-
-		$file['services'] = $renamedServices;
 	}
 
 	/**
