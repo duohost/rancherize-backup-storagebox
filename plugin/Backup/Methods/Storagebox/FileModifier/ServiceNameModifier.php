@@ -38,7 +38,7 @@ class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
 			$renamedServices[$newName] = $service;
 			if( strtolower($serviceName) === $data->getDatabase()->getService() )
 				$data->setNewServiceName($newName);
-			if( strtolower($serviceName) === $data->getMysqlVolumeName() )
+			if( strtolower($serviceName) === $data->getMysqlVolumeService() )
 				$data->setNewMysqlVolumeService($newName);
 
 		}
