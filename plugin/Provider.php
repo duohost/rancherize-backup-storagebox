@@ -51,7 +51,7 @@ class Provider implements \Rancherize\Plugin\Provider {
 
 		$container['storagebox-method'] = function($c) {
 			return new StorageboxMethod($c['storagebox-repository'], $c['access-method-factory'],
-					$c['docker-compose-reader'], $c['docker-compose-versionizer'], $c['by-key-service']);
+					$c['docker-compose-reader'], $c['docker-compose-versionizer'], $c['by-key-service'], $c['build-service']);
 		};
 	}
 

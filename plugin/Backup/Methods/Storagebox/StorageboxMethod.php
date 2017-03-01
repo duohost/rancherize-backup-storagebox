@@ -4,6 +4,7 @@ use Rancherize\Configuration\Configuration;
 use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
 use Rancherize\Docker\DockerComposerVersionizer;
 use Rancherize\General\Services\ByKeyService;
+use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FileModifier;
@@ -68,6 +69,10 @@ class StorageboxMethod implements BackupMethod {
 	 * @var FileModifier[]
 	 */
 	private $modifiers = [];
+	/**
+	 * @var BuildService
+	 */
+	private $buildService;
 
 	/**
 	 * StorageboxMethod constructor.
@@ -76,10 +81,11 @@ class StorageboxMethod implements BackupMethod {
 	 * @param DockerComposeReader $composeReader
 	 * @param DockerComposerVersionizer $composerVersionizer
 	 * @param ByKeyService $byKeyService
+	 * @param BuildService $buildService
 	 */
 	public function __construct(StorageboxRepository $repository, AccessMethodFactory $methodFactory,
 							DockerComposeReader $composeReader, DockerComposerVersionizer $composerVersionizer,
-							ByKeyService $byKeyService
+							ByKeyService $byKeyService, BuildService $buildService
 	) {
 		$this->repository = $repository;
 		$this->methodFactory = $methodFactory;
@@ -102,6 +108,7 @@ class StorageboxMethod implements BackupMethod {
 			new SidekickNameModifier(),
 			new VolumesFromNameModifier(),
 		];
+		$this->buildService = $buildService;
 	}
 
 	/**
@@ -178,8 +185,7 @@ class StorageboxMethod implements BackupMethod {
 		}
 
 		$fileContent = Yaml::dump($file);
-		$filePath = getcwd().'/.rancherize/docker-compose.yml';
-		file_put_contents($filePath, $fileContent);
+		$this->buildService->createDockerCompose($fileContent);
 	}
 
 	/**
