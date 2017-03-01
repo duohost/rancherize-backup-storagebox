@@ -124,7 +124,6 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			new RootPasswordCollector($byKeyService),
 			new SstPasswordCollector($byKeyService),
 			new NamedVolumeCollector(),
-			new VolumesEntryModifier(),
 		];
 
 		$this->modifiers = [
@@ -133,7 +132,8 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			new SidekickNameModifier(),
 			new VolumesFromNameModifier(),
 			new ScaleDownModifier(),
-			new VolumeNameModifier($nameIsPathChecker)
+			new VolumeNameModifier($nameIsPathChecker),
+			new VolumesEntryModifier(),
 		];
 		$this->buildService = $buildService;
 		$this->rancherService = $rancherService;
