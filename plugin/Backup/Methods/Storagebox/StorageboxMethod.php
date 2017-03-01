@@ -1,9 +1,14 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox;
 
+use Rancherize\Blueprint\Infrastructure\Infrastructure;
+use Rancherize\Blueprint\Infrastructure\InfrastructureWriter;
+use Rancherize\Blueprint\Infrastructure\Service\Service;
+use Rancherize\Blueprint\Infrastructure\Volume\Volume;
 use Rancherize\Configuration\Configuration;
 use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
 use Rancherize\Docker\DockerComposerVersionizer;
 use Rancherize\Docker\RancherComposeReader\RancherComposeReader;
+use Rancherize\File\FileWriter;
 use Rancherize\General\Services\ByKeyService;
 use Rancherize\General\Services\NameIsPathChecker;
 use Rancherize\RancherAccess\RancherService;
@@ -92,6 +97,10 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 	 * @var ProcessHelper
 	 */
 	private $processHelper;
+	/**
+	 * @var InfrastructureWriter
+	 */
+	private $infrastructureWriter;
 
 	/**
 	 * StorageboxMethod constructor.
@@ -104,12 +113,15 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 	 * @param BuildService $buildService
 	 * @param RancherService $rancherService
 	 * @param NameIsPathChecker $nameIsPathChecker
+	 * @param InfrastructureWriter $infrastructureWriter
 	 */
 	public function __construct(StorageboxRepository $repository, AccessMethodFactory $methodFactory,
 							DockerComposeReader $composeReader, RancherComposeReader $rancherReader,
 							DockerComposerVersionizer $composerVersionizer,
 							ByKeyService $byKeyService, BuildService $buildService, RancherService $rancherService,
-							NameIsPathChecker $nameIsPathChecker
+							NameIsPathChecker $nameIsPathChecker,
+							// TODO: Move populating the collectors and modifiers outside into the container function -> dependencies don't have to pass through here
+							InfrastructureWriter $infrastructureWriter
 	) {
 		$this->repository = $repository;
 		$this->methodFactory = $methodFactory;
@@ -139,6 +151,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		];
 		$this->buildService = $buildService;
 		$this->rancherService = $rancherService;
+		$this->infrastructureWriter = $infrastructureWriter;
 	}
 
 	/**
@@ -224,8 +237,34 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->rancherService->setAccount( $data->getRancherAccount() )
 			->setOutput( $output )
 			->setProcessHelper( $this->processHelper );
-		$this->rancherService->start(getcwd().'/.rancherize', $data->getDatabase()->getStack());
-		$this->rancherService->stop(getcwd().'/.rancherize', $data->getDatabase()->getStack());
+		$workDirectory = getcwd() . '/.rancherize';
+		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
+		$this->rancherService->stop($workDirectory, $data->getDatabase()->getStack());
+
+		$clearService = new Service();
+		$clearService->setImage('ipunktbs/xtrabackup:0.2.1');
+		$clearService->setCommand('clear yes');
+		$stackName = $data->getDatabase()->getStack();
+		$newServiceName = $data->getNewServiceName();
+		$newDataSidekick = $data->getNewMysqlVolumeService();
+		$newMysqlVolume = $data->getNewMysqlVolumeName();
+
+		$clearService->setRestart(Service::RESTART_START_ONCE);
+		// Start on the same server as
+		$clearService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}");
+		// No 2 services on the same host
+		$clearService->addLabel('io.rancher.scheduler.affinity:container_label_ne', 'io.rancher.stack_service.name=$${stack_name}/$${service_name}');
+		$clearService->addVolume($newMysqlVolume, '/var/lib/mysql');
+		$volume = new Volume();
+		$volume->setName($newMysqlVolume);
+
+		$clearInfrastructure = new Infrastructure();
+		$clearInfrastructure->addService($clearService);
+		$clearInfrastructure->addVolume($volume);
+
+		$this->infrastructureWriter->setPath($workDirectory)
+			->setSkipClear(false)
+			->write($clearInfrastructure, new FileWriter());
 	}
 
 	/**

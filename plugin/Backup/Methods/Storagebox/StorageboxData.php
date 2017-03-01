@@ -82,6 +82,30 @@ class StorageboxData {
 	protected $mysqlVolumeName;
 
 	/**
+	 * @var string
+	 */
+	protected $mysqlVolumeService;
+
+	/**
+	 * The name of the service with the mysql volume after the name replace was done
+	 *
+	 * @var string
+	 */
+	protected $newMysqlVolumeService;
+
+	/**
+	 * The name of the mysql volume after the name replace was done
+	 *
+	 * @var string
+	 */
+	protected $newMysqlVolumeName;
+
+	/**
+	 * @var string
+	 */
+	protected $newServiceName;
+
+	/**
 	 * @return string
 	 */
 	public function getEnvironmentName(): string {
@@ -277,5 +301,61 @@ class StorageboxData {
 	 */
 	public function setRancherData(array $rancherData) {
 		$this->rancherData = $rancherData;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getNewServiceName(): string {
+		return $this->newServiceName;
+	}
+
+	/**
+	 * @param string $newServiceName
+	 */
+	public function setNewServiceName(string $newServiceName) {
+		$this->newServiceName = $newServiceName;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getMysqlVolumeService(): string {
+		return $this->mysqlVolumeService;
+	}
+
+	/**
+	 * @param string $mysqlVolumeService
+	 */
+	public function setMysqlVolumeService(string $mysqlVolumeService) {
+		$this->mysqlVolumeService = $mysqlVolumeService;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getNewMysqlVolumeService(): string {
+		return $this->newMysqlVolumeService;
+	}
+
+	/**
+	 * @param string $newMysqlVolumeService
+	 */
+	public function setNewMysqlVolumeService(string $newMysqlVolumeService) {
+		$this->newMysqlVolumeService = $newMysqlVolumeService;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getNewMysqlVolumeName(): string {
+		return $this->newMysqlVolumeName;
+	}
+
+	/**
+	 * @param string $newMysqlVolumeName
+	 */
+	public function setNewMysqlVolumeName(string $newMysqlVolumeName) {
+		$this->newMysqlVolumeName = $newMysqlVolumeName;
 	}
 }

@@ -1,4 +1,5 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector;
+
 use RancherizeBackupStoragebox\Backup\Exceptions\ConfigurationNotFoundException;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\StorageboxData;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,7 +19,7 @@ class NamedVolumeCollector implements InformationCollector {
 	public function collect(InputInterface $input, OutputInterface $output, &$data) {
 		$sidekicks = $data->getSidekicks();
 
-		foreach ($sidekicks as $sidekick) {
+		foreach ($sidekicks as $sidekickName => $sidekick) {
 
 			if (!array_key_exists('volumes', $sidekick))
 				continue;
@@ -26,6 +27,7 @@ class NamedVolumeCollector implements InformationCollector {
 			try {
 				$volumeName = $this->getMysqlVolume($sidekick['volumes']);
 				$data->setMysqlVolumeName($volumeName);
+				$data->setMysqlVolumeService($sidekickName);
 			} catch(ConfigurationNotFoundException $e) {
 				// /var/lib/mysql volume not within this service
 			}

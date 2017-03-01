@@ -64,6 +64,9 @@ class VolumeNameModifier implements FileModifier, RequiresReplacementRegex {
 
 				$newName = preg_replace($this->regex, $this->replacement, $name);
 				$renamedVolumes[] = "$newName:$path";
+
+				if( strtolower($name) === $data->getMysqlVolumeName() )
+					$data->setNewMysqlVolumeName($newName);
 			}
 
 			$composeParser->setVolumes($service, $renamedVolumes);

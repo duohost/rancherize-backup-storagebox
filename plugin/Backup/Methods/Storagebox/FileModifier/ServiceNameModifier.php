@@ -1,5 +1,7 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier;
 
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\StorageboxData;
+
 /**
  * Class ServiceNameModifier
  * @package RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier
@@ -19,7 +21,7 @@ class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
 	/**
 	 * @param array $dockerFile
 	 * @param array $rancherFile
-	 * @param $data
+	 * @param StorageboxData $data
 	 */
 	public function modify(array &$dockerFile, array &$rancherFile, $data) {
 
@@ -34,6 +36,10 @@ class ServiceNameModifier implements FileModifier, RequiresReplacementRegex {
 
 			$newName = preg_replace($regex, $replacement, $serviceName);
 			$renamedServices[$newName] = $service;
+			if( strtolower($serviceName) === $data->getDatabase()->getService() )
+				$data->setNewServiceName($newName);
+			if( strtolower($serviceName) === $data->getMysqlVolumeName() )
+				$data->setNewMysqlVolumeService($newName);
 
 		}
 		$dockerFile['services'] = $renamedServices;
