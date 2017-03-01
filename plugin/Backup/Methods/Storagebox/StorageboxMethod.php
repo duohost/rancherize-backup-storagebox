@@ -208,7 +208,7 @@ class StorageboxMethod implements BackupMethod {
 		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
 		$this->buildService->createRancherCompose($rancherFileContent);
 
-		//$this->rancherService->start(getcwd().'/.rancherize', $data->getDatabase()->getStack());
+		$this->rancherService->start(getcwd().'/.rancherize', $data->getDatabase()->getStack());
 	}
 
 	/**
