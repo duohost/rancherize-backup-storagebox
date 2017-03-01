@@ -25,7 +25,7 @@ class VolumesFromNameModifier implements FileModifier, RequiresReplacementRegex 
 		$regex = $this->regex;
 		$replacement = $this->replacement;
 
-		foreach($data['services'] as &$service) {
+		foreach($file['services'] as &$service) {
 			if( !array_key_exists('volumes_from', $service) )
 				continue;
 
