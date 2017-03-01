@@ -10,6 +10,7 @@ use Rancherize\RancherAccess\RancherService;
 use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ContainerNetModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FileModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FilterSidekicksModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\RequiresReplacementRegex;
@@ -134,6 +135,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			new ScaleDownModifier(),
 			new VolumeNameModifier($nameIsPathChecker),
 			new VolumesEntryModifier(),
+			new ContainerNetModifier(),
 		];
 		$this->buildService = $buildService;
 		$this->rancherService = $rancherService;
