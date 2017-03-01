@@ -20,7 +20,7 @@ class VolumesEntryModifier implements FileModifier {
 			$dockerFile['volumes'] = [];
 
 		foreach($dockerFile['services'] as $service) {
-			if( !array_key_exists('volumes_from', $service) )
+			if( !array_key_exists('volumes', $service) )
 				continue;
 
 			$volumes = $composeParser->getVolumes($service);
