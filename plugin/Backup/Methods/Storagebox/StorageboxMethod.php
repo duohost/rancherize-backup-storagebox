@@ -6,6 +6,9 @@ use Rancherize\Docker\DockerComposerVersionizer;
 use Rancherize\General\Services\ByKeyService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FileModifier;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\RequiresReplacementRegex;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ServiceNameModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeVersionCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\EnvironmentConfigCollector;
@@ -59,6 +62,11 @@ class StorageboxMethod implements BackupMethod {
 	private $collectors = [];
 
 	/**
+	 * @var FileModifier[]
+	 */
+	private $modifiers = [];
+
+	/**
 	 * StorageboxMethod constructor.
 	 * @param StorageboxRepository $repository
 	 * @param AccessMethodFactory $methodFactory
@@ -84,6 +92,10 @@ class StorageboxMethod implements BackupMethod {
 			new RootPasswordCollector($byKeyService),
 			new SstPasswordCollector($byKeyService),
 			new NamedVolumeCollector(),
+		];
+
+		$this->modifiers = [
+			new ServiceNameModifier(),
 		];
 	}
 
@@ -141,7 +153,26 @@ class StorageboxMethod implements BackupMethod {
 			$collector->collect($input, $output, $data);
 		}
 
-		var_dump($data);
+		$file = [
+			'version' => '2',
+			'services' => array_merge(
+				[$data->getDatabase()->getService() => $data->getService()],
+				$data->getSidekicks()
+			)
+		];
+
+		// TODO: Allow to set as option. If not set: ask user
+		$regex = '$';
+		$replacement = '-backup';
+
+		foreach($this->modifiers as $modifier) {
+			if($modifier instanceof RequiresReplacementRegex)
+				$modifier->setReplacementRegex($regex, $replacement);
+
+			$modifier->modify($file, $data);
+		}
+
+		var_dump( $file );
 	}
 
 	/**
