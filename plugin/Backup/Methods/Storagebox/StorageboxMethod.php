@@ -303,6 +303,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$backupVolume = new Volume();
 		$backupVolume->setName( $backupVolumeName );
 		$backupVolume->setDriver( $backupVolumeDriver );
+		$backupVolume->setExternal( true );
 
 		$restoreInfrastructure = new Infrastructure();
 		$restoreInfrastructure->addService($restoreService);
