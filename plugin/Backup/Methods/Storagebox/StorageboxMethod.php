@@ -271,7 +271,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($clearInfrastructure, new FileWriter());
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack(), true);
+		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
 		/*
 		 * TODO: /Move to clear service
 		 */
@@ -308,7 +308,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($restoreInfrastructure, new FileWriter());
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack(), true);
+		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
 		/*
 		 * TODO: /Move to restore service
 		 */
