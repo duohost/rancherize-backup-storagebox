@@ -12,6 +12,7 @@ use Rancherize\File\FileWriter;
 use Rancherize\General\Services\ByKeyService;
 use Rancherize\General\Services\NameIsPathChecker;
 use Rancherize\RancherAccess\RancherService;
+use Rancherize\RancherAccess\SingleStateMatcher;
 use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
@@ -272,6 +273,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			->setSkipClear(false)
 			->write($clearInfrastructure, new FileWriter());
 		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
+		$this->rancherService->wait($stackName, $clearService->getName(), new SingleStateMatcher('started-once') );
 		/*
 		 * TODO: /Move to clear service
 		 */
@@ -301,6 +303,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			->setSkipClear(false)
 			->write($volumeCreateInfrastructure, new FileWriter());
 		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
+		$this->rancherService->wait($stackName, $volumeCreateService->getName(), new SingleStateMatcher('started-once') );
 
 		/*
 		 * TODO: Move to restore service
@@ -331,7 +334,8 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($restoreInfrastructure, new FileWriter());
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack(), true);
+		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
+		$this->rancherService->wait($stackName, $restoreService->getName(), new SingleStateMatcher('started-once') );
 		/*
 		 * TODO: /Move to restore service
 		 */
