@@ -279,11 +279,14 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$backupData = $database->getBackupData();
 		if( !array_key_exists('volume', $backupData) )
 			throw new ConfigurationNotFoundException('backup.volume');
+		if( !array_key_exists('volume-driver', $backupData) )
+			throw new ConfigurationNotFoundException('backup.volume');
 
 		/*
 		 * TODO: Move to restore service
 		 */
-		$backupVolumeName = $database->getBackupData()['volume'];
+		$backupVolumeName = $backupData['volume'];
+		$backupVolumeDriver = $backupData['volume-driver'];
 
 		$restoreService = new Service();
 		$restoreService->setImage('ipunktbs/xtrabackup:0.2.1');
@@ -299,7 +302,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 
 		$backupVolume = new Volume();
 		$backupVolume->setName( $backupVolumeName );
-		$backupVolume->setDriver('local');
+		$backupVolume->setDriver( $backupVolumeDriver );
 
 		$restoreInfrastructure = new Infrastructure();
 		$restoreInfrastructure->addService($restoreService);
