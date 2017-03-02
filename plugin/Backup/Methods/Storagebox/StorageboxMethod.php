@@ -350,7 +350,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$pmaService->setImage('phpmyadmin/phpmyadmin:4.6');
 		$pmaService->setName($data->getNewServiceName().'-pma');
 		$pmaService->addLabel('pma', 'backup');
-		$pmaService->addExternalLink("io.rancher.stack_service.name=${stackName}/${newServiceName}", 'db');
+		$pmaService->addExternalLink("${stackName}/${newServiceName}", 'db');
 		// Workaround for the phpmyadmin bug https://github.com/phpmyadmin/docker/issues/23
 		$pmaService->setEnvironmentVariable('PMA_HOST', 'db.rancher.internal');
 		$pmaService->setEnvironmentVariable('PMA_USER', 'root');
