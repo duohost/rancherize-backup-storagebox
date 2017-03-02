@@ -243,10 +243,16 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$workDirectory = getcwd() . '/.rancherize';
 		$stackName = $data->getDatabase()->getStack();
 		$newServiceName = $data->getNewServiceName();
+		$output->writeln("Starting $newServiceName.");
 		$this->rancherService->start($workDirectory, $stackName);
+		$output->writeln("Waiting for $newServiceName to start.");
 		$this->rancherService->wait($stackName, $newServiceName, new SingleStateMatcher('active') );
+		$output->writeln("$newServiceName Started.");
+		$output->writeln("Stopping $newServiceName.");
 		$this->rancherService->stop($workDirectory, $stackName);
+		$output->writeln("Waiting for $newServiceName to stop.");
 		$this->rancherService->wait($stackName, $newServiceName, new SingleStateMatcher('inactive') );
+		$output->writeln("$newServiceName Stopped.");
 
 		$clearService = new Service();
 		$clearService->setName($data->getNewServiceName().'-clear');
@@ -275,8 +281,12 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($clearInfrastructure, new FileWriter());
+
+		$output->writeln("Starting ".$clearService->getName().".");
 		$this->rancherService->start($workDirectory, $stackName);
+		$output->writeln("Waiting for ".$clearService->getName()." to finish.");
 		$this->rancherService->wait($stackName, $clearService->getName(), new HealthStateMatcher('started-once') );
+		$output->writeln($clearService->getName()." finished.");
 		/*
 		 * TODO: /Move to clear service
 		 */
@@ -305,8 +315,12 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($volumeCreateInfrastructure, new FileWriter());
+
+		$output->writeln("Starting ".$volumeCreateService->getName().".");
 		$this->rancherService->start($workDirectory, $stackName);
+		$output->writeln("Waiting for ".$volumeCreateService->getName()." to finish.");
 		$this->rancherService->wait($stackName, $volumeCreateService->getName(), new HealthStateMatcher('started-once') );
+		$output->writeln($volumeCreateService->getName()." finished.");
 
 		/*
 		 * TODO: Move to restore service
@@ -337,8 +351,11 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($restoreInfrastructure, new FileWriter());
+		$output->writeln("Starting ".$restoreService->getName().".");
 		$this->rancherService->start($workDirectory, $stackName);
+		$output->writeln("Waiting for ".$restoreService->getName()." to finish.");
 		$this->rancherService->wait($stackName, $restoreService->getName(), new HealthStateMatcher('started-once') );
+		$output->writeln($restoreService->getName()." finished.");
 		/*
 		 * TODO: /Move to restore service
 		 */
@@ -350,6 +367,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
 		$this->buildService->createRancherCompose($rancherFileContent);
 
+		$output->writeln("Starting $newServiceName.");
 		$this->rancherService->start($workDirectory, $stackName);
 
 		// TODO: add PMA
@@ -371,6 +389,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($pmaInfrastructure, new FileWriter());
+		$output->writeln("Starting ".$pmaService->getName().".");
 		$this->rancherService->start($workDirectory, $stackName);
 	}
 
