@@ -25,7 +25,9 @@ class VolumesEntryModifier implements FileModifier {
 
 			$volumes = $composeParser->getVolumes($service);
 			foreach($volumes as $name => $volume) {
-				$dockerFile['volumes'][$name] = [];
+				$dockerFile['volumes'][$name] = [
+					'driver' => 'local'
+				];
 			}
 		}
 

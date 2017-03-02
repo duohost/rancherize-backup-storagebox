@@ -258,6 +258,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$clearService->addVolume($newMysqlVolume, '/var/lib/mysql');
 		$volume = new Volume();
 		$volume->setName($newMysqlVolume);
+		$volume->setDriver('local');
 
 		$clearInfrastructure = new Infrastructure();
 		$clearInfrastructure->addService($clearService);
