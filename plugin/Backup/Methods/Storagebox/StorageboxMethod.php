@@ -15,6 +15,7 @@ use Rancherize\RancherAccess\RancherService;
 use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
+use RancherizeBackupStoragebox\Backup\Exceptions\ConfigurationNotFoundException;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\ContainerNetModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FileModifier;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier\FilterSidekicksModifier;
@@ -250,6 +251,9 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$newDataSidekick = $data->getNewMysqlVolumeService();
 		$newMysqlVolume = $data->getNewMysqlVolumeName();
 
+		/*
+		 * TODO: Move to clear service
+		 */
 		$clearService->setRestart(Service::RESTART_START_ONCE);
 		// Start on the same server as
 		$clearService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}");
@@ -267,6 +271,57 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($clearInfrastructure, new FileWriter());
+		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack(), true);
+		/*
+		 * TODO: /Move to clear service
+		 */
+
+		$backupData = $database->getBackupData();
+		if( array_key_exists('volume', $backupData) )
+			throw new ConfigurationNotFoundException('backup.volume');
+
+		/*
+		 * TODO: Move to restore service
+		 */
+		$backupVolumeName = $database->getBackupData()['volume'];
+
+		$restoreService = new Service();
+		$restoreService->setName($data->getNewServiceName().'-restore');
+		$restoreService->setCommand('restore '.$backup);
+		$restoreService->setRestart(Service::RESTART_START_ONCE);
+		// Start on the same server as
+		$restoreService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}");
+		// No 2 services on the same host
+		$restoreService->addLabel('io.rancher.scheduler.affinity:container_label_ne', 'io.rancher.stack_service.name=$${stack_name}/$${service_name}');
+		$restoreService->addVolume( $newMysqlVolume, '/var/lib/mysql' );
+		$restoreService->addVolume( $backupVolumeName, '/target' );
+
+		$backupVolume = new Volume();
+		$backupVolume->setName( $backupVolumeName );
+		$backupVolume->setDriver('local');
+
+		$restoreInfrastructure = new Infrastructure();
+		$restoreInfrastructure->addService($restoreService);
+		$restoreInfrastructure->addVolume($volume);
+		$restoreInfrastructure->addVolume($backupVolume);
+
+		$this->infrastructureWriter->setPath($workDirectory)
+			->setSkipClear(false)
+			->write($restoreInfrastructure, new FileWriter());
+		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack(), true);
+		/*
+		 * TODO: /Move to restore service
+		 */
+
+		// TODO: move to builder service and just call again
+		$dockerFileContent = Yaml::dump($dockerCompose, 100, 2);
+		$this->buildService->createDockerCompose($dockerFileContent);
+
+		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
+		$this->buildService->createRancherCompose($rancherFileContent);
+
+		// TODO: add PMA
+
 		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
 	}
 
