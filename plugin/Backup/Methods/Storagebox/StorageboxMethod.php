@@ -331,7 +331,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($restoreInfrastructure, new FileWriter());
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
+		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack(), true);
 		/*
 		 * TODO: /Move to restore service
 		 */
