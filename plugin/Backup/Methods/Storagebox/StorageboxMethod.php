@@ -342,8 +342,27 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
 		$this->buildService->createRancherCompose($rancherFileContent);
 
-		// TODO: add PMA
+		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
 
+		// TODO: add PMA
+		$pmaService = new Service();
+		$pmaService->setImage('phpmyadmin/phpmyadmin:4.6');
+		$pmaService->setName($data->getNewServiceName().'-pma');
+		$pmaService->addLabel('pma', 'backup');
+		$pmaService->addExternalLink("io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}", 'db');
+		// Workaround for the phpmyadmin bug https://github.com/phpmyadmin/docker/issues/23
+		$pmaService->setEnvironmentVariable('PMA_HOST', 'db.rancher.internal');
+		$pmaService->setEnvironmentVariable('PMA_USER', 'root');
+		$pmaService->setEnvironmentVariable('PMA_PASSWORD', $data->getRootPassword());
+
+		$pmaInfrastructure = new Infrastructure();
+		$pmaInfrastructure->addService($pmaService);
+		$pmaInfrastructure->addVolume($volume);
+		$pmaInfrastructure->addVolume($backupVolume);
+
+		$this->infrastructureWriter->setPath($workDirectory)
+			->setSkipClear(false)
+			->write($pmaInfrastructure, new FileWriter());
 		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
 	}
 
