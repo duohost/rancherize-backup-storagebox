@@ -13,6 +13,7 @@ use Rancherize\General\Services\ByKeyService;
 use Rancherize\General\Services\NameIsPathChecker;
 use Rancherize\RancherAccess\HealthStateMatcher;
 use Rancherize\RancherAccess\RancherService;
+use Rancherize\RancherAccess\SingleStateMatcher;
 use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
@@ -243,8 +244,9 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$stackName = $data->getDatabase()->getStack();
 		$newServiceName = $data->getNewServiceName();
 		$this->rancherService->start($workDirectory, $stackName);
+		$this->rancherService->wait($stackName, $newServiceName, new SingleStateMatcher('active') );
 		$this->rancherService->stop($workDirectory, $stackName);
-		$this->rancherService->wait($stackName, $newServiceName, new HealthStateMatcher('started-once') );
+		$this->rancherService->wait($stackName, $newServiceName, new SingleStateMatcher('inactive') );
 
 		$clearService = new Service();
 		$clearService->setName($data->getNewServiceName().'-clear');
