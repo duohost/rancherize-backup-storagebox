@@ -11,8 +11,8 @@ use Rancherize\Docker\RancherComposeReader\RancherComposeReader;
 use Rancherize\File\FileWriter;
 use Rancherize\General\Services\ByKeyService;
 use Rancherize\General\Services\NameIsPathChecker;
+use Rancherize\RancherAccess\HealthStateMatcher;
 use Rancherize\RancherAccess\RancherService;
-use Rancherize\RancherAccess\SingleStateMatcher;
 use Rancherize\Services\BuildService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\BackupMethod;
@@ -240,15 +240,16 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			->setOutput( $output )
 			->setProcessHelper( $this->processHelper );
 		$workDirectory = getcwd() . '/.rancherize';
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
-		$this->rancherService->stop($workDirectory, $data->getDatabase()->getStack());
+		$stackName = $data->getDatabase()->getStack();
+		$newServiceName = $data->getNewServiceName();
+		$this->rancherService->start($workDirectory, $stackName);
+		$this->rancherService->stop($workDirectory, $stackName);
+		$this->rancherService->wait($stackName, $newServiceName, new HealthStateMatcher('started-once') );
 
 		$clearService = new Service();
 		$clearService->setName($data->getNewServiceName().'-clear');
 		$clearService->setImage('ipunktbs/xtrabackup:0.2.1');
 		$clearService->setCommand('clear yes');
-		$stackName = $data->getDatabase()->getStack();
-		$newServiceName = $data->getNewServiceName();
 		$newDataSidekick = $data->getNewMysqlVolumeService();
 		$newMysqlVolume = $data->getNewMysqlVolumeName();
 
@@ -272,8 +273,8 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($clearInfrastructure, new FileWriter());
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
-		$this->rancherService->wait($stackName, $clearService->getName(), new SingleStateMatcher('started-once') );
+		$this->rancherService->start($workDirectory, $stackName);
+		$this->rancherService->wait($stackName, $clearService->getName(), new HealthStateMatcher('started-once') );
 		/*
 		 * TODO: /Move to clear service
 		 */
@@ -302,8 +303,8 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($volumeCreateInfrastructure, new FileWriter());
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
-		$this->rancherService->wait($stackName, $volumeCreateService->getName(), new SingleStateMatcher('started-once') );
+		$this->rancherService->start($workDirectory, $stackName);
+		$this->rancherService->wait($stackName, $volumeCreateService->getName(), new HealthStateMatcher('started-once') );
 
 		/*
 		 * TODO: Move to restore service
@@ -334,8 +335,8 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($restoreInfrastructure, new FileWriter());
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
-		$this->rancherService->wait($stackName, $restoreService->getName(), new SingleStateMatcher('started-once') );
+		$this->rancherService->start($workDirectory, $stackName);
+		$this->rancherService->wait($stackName, $restoreService->getName(), new HealthStateMatcher('started-once') );
 		/*
 		 * TODO: /Move to restore service
 		 */
@@ -347,7 +348,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
 		$this->buildService->createRancherCompose($rancherFileContent);
 
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
+		$this->rancherService->start($workDirectory, $stackName);
 
 		// TODO: add PMA
 		$pmaService = new Service();
@@ -368,7 +369,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
 			->write($pmaInfrastructure, new FileWriter());
-		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
+		$this->rancherService->start($workDirectory, $stackName);
 	}
 
 	/**
