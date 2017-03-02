@@ -277,7 +277,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		 */
 
 		$backupData = $database->getBackupData();
-		if( array_key_exists('volume', $backupData) )
+		if( !array_key_exists('volume', $backupData) )
 			throw new ConfigurationNotFoundException('backup.volume');
 
 		/*
