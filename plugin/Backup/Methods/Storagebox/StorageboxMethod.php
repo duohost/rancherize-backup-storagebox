@@ -281,12 +281,28 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			throw new ConfigurationNotFoundException('backup.volume');
 		if( !array_key_exists('volume-driver', $backupData) )
 			throw new ConfigurationNotFoundException('backup.volume');
+		$backupVolumeName = $backupData['volume'];
+		$backupVolumeDriver = $backupData['volume-driver'];
+
+		/*
+		 * Ensure backup volume is available
+		 */
+		$volumeCreateInfrastructure = new Infrastructure();
+		$volumeCreateService = new Service();
+		$volumeCreateService->setName($data->getNewServiceName().'-volume');
+		$volumeCreateService->setImage('area51/docker-client');
+		$volumeCreateService->setCommand("docker volume create --driver=${backupVolumeDriver} --name=${backupVolumeName}");
+		$volumeCreateService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}");
+		$volumeCreateService->addLabel('io.rancher.scheduler.affinity:container_label_ne', 'io.rancher.stack_service.name=$${stack_name}/$${service_name}');
+		$volumeCreateInfrastructure->addService($volumeCreateService);
+		$this->infrastructureWriter->setPath($workDirectory)
+			->setSkipClear(false)
+			->write($volumeCreateInfrastructure, new FileWriter());
+		$this->rancherService->start($workDirectory, $data->getDatabase()->getStack());
 
 		/*
 		 * TODO: Move to restore service
 		 */
-		$backupVolumeName = $backupData['volume'];
-		$backupVolumeDriver = $backupData['volume-driver'];
 
 		$restoreService = new Service();
 		$restoreService->setImage('ipunktbs/xtrabackup:0.2.1');
