@@ -294,6 +294,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$volumeCreateService->setCommand("docker volume create --driver=${backupVolumeDriver} --name=${backupVolumeName}");
 		$volumeCreateService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}");
 		$volumeCreateService->addLabel('io.rancher.scheduler.affinity:container_label_ne', 'io.rancher.stack_service.name=$${stack_name}/$${service_name}');
+		$volumeCreateService->addVolume('/var/run/docker.sock', '/var/run/docker.sock');
 		$volumeCreateInfrastructure->addService($volumeCreateService);
 		$this->infrastructureWriter->setPath($workDirectory)
 			->setSkipClear(false)
