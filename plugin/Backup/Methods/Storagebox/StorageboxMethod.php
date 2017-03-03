@@ -392,6 +392,35 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			->write($pmaInfrastructure, new FileWriter());
 		$output->writeln("Starting ".$pmaService->getName().".");
 		$this->rancherService->start($workDirectory, $stackName);
+
+		$rmInfrastructure = new Infrastructure();
+		$commandServices = [
+			$clearService,
+			$restoreService,
+			$volumeCreateService
+		];
+		$commandServiceNames = [];
+		foreach($commandServices as $commandService) {
+			$rmInfrastructure->addService($commandService);
+			$commandServiceNames[] = $commandService->getName();
+		}
+		$rmInfrastructure->addVolume($volume);
+		$rmInfrastructure->addVolume($backupVolume);
+
+		$this->infrastructureWriter->setPath($workDirectory)
+			->setSkipClear(false)
+			->write($rmInfrastructure, new FileWriter());
+
+		$output->writeln("Starting cleanup up command services ".implode(', ', $commandServiceNames).'.');
+		$this->rancherService->rm($workDirectory, $stackName, $commandServiceNames);
+
+		$output->writeln("Waiting for pma to become active");
+		$this->rancherService->wait($stackName, $newServiceName, new SingleStateMatcher('active') );
+		if( array_key_exists('pma-url', $backupData) )
+			$output->writeln( [
+				"PMA is active. You may use it on: ".$backupData['pma-url'].'.',
+				'Note that it may take around 2 minutes before a load balancer notices the new pma service.',
+			]);
 	}
 
 	/**
