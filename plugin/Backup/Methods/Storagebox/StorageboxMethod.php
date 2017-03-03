@@ -380,6 +380,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$pmaService->setEnvironmentVariable('PMA_HOST', 'db.rancher.internal');
 		$pmaService->setEnvironmentVariable('PMA_USER', 'root');
 		$pmaService->setEnvironmentVariable('PMA_PASSWORD', $data->getRootPassword());
+		$pmaService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}");
 
 		$pmaInfrastructure = new Infrastructure();
 		$pmaInfrastructure->addService($pmaService);
