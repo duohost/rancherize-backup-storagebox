@@ -16,7 +16,7 @@ class FilterSidekicksModifier implements FileModifier {
 	public function modify(array &$dockerFile, array &$rancherFile, $data) {
 
 		$sidekicks = $data->getSidekicks();
-		$serviceName = $data->getDatabase()->getService();
+		$serviceName = $data->getBackup()->getServiceName();
 		$serviceData = $data->getService();
 
 		$services = array_merge(

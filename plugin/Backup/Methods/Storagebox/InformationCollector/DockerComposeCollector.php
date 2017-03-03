@@ -39,15 +39,15 @@ class DockerComposeCollector implements InformationCollector {
 	 */
 	public function collect(InputInterface $input, OutputInterface $output, &$data) {
 
-		$rancherService = $this->getRancher();
-		$rancherAccount = $data->getRancherAccount();
-		$databaseStack = $data->getDatabase()->getStack();
+		$backup = $data->getBackup();
 
-		$rancherService->setAccount($rancherAccount);
-		list($currentConfig, $currentRancherize) = $rancherService->retrieveConfig($databaseStack);
+		$currentConfig = $backup->getDockerCompose();
+		$currentRancher = $backup->getRancherCompose();
+
 		$composeData = $this->composeReader->read($currentConfig);
-		$rancherizeData = $this->rancherReader->read($currentRancherize);
+		$rancherizeData = $this->rancherReader->read($currentRancher);
 		$data->setComposeData($composeData);
 		$data->setRancherData($rancherizeData);
+
 	}
 }

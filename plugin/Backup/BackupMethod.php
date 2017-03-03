@@ -23,10 +23,10 @@ interface BackupMethod {
 	/**
 	 * @param string $environment
 	 * @param Database $database
-	 * @param string $backup
+	 * @param Backup $backupKey
 	 * @param InputInterface $input
 	 * @param OutputInterface $output
 	 * @return
 	 */
-	function restore(string $environment, Database $database, string $backup, InputInterface $input, OutputInterface $output);
+	function restore(string $environment, Database $database, Backup $backupKey, InputInterface $input, OutputInterface $output);
 }

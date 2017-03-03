@@ -16,7 +16,8 @@ class ServiceCollector implements InformationCollector {
 	 * @return
 	 */
 	public function collect(InputInterface $input, OutputInterface $output, &$data) {
-		$databaseService = $data->getDatabase()->getService();
+
+		$databaseService = $data->getBackup()->getServiceName();
 		$composeParser = $data->getComposeParser();
 		$composeData = $data->getComposeData();
 

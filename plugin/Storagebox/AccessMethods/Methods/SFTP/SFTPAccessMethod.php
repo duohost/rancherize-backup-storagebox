@@ -46,8 +46,22 @@ class SFTPAccessMethod implements AccessMethod {
 			$backup = new PODBackup();
 
 
+			$backupConfig = $connection->receiveFile("/$directory/backup.json");
+			$dockerCompose = $connection->receiveFile("/$directory/docker-compose.yml");
+			$rancherCompose = $connection->receiveFile("/$directory/rancher-compose.yml");
+
+			$backupData = json_decode($backupConfig, true);
+			if( !array_key_exists('stack', $backupData) )
+				continue;
+			if( !array_key_exists('service', $backupData) )
+				continue;
+
 			$backup->setKey($directory);
 			$backup->setName($directory);
+			$backup->setDockerCompose($dockerCompose);
+			$backup->setRancherCompose($rancherCompose);
+			$backup->setStackName($backupData['stack']);
+			$backup->setServiceName($backupData['service']);
 
 			$backups[] = $backup;
 

@@ -68,15 +68,15 @@ class SFTPConnection {
 		return $tempArray;
 	}
 
-	public function receiveFile($remote_file, $local_file)
+	public function receiveFile($remote_file)
 	{
 		$sftp = $this->sftp;
 		$stream = @fopen("ssh2.sftp://$sftp$remote_file", 'r');
 		if (! $stream)
 			throw new Exception("Could not open file: $remote_file");
 		$contents = fread($stream, filesize("ssh2.sftp://$sftp$remote_file"));
-		file_put_contents ($local_file, $contents);
 		@fclose($stream);
+		return $contents;
 	}
 
 	public function deleteFile($remote_file){

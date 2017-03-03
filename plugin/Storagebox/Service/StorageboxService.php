@@ -144,7 +144,7 @@ class StorageboxService {
 		if($method instanceof RequiresProcessHelper)
 			$method->setProcessHelper($this->processHelper);
 
-		$method->restore($environment, $database, $backupKey, $input, $output);
+		$method->restore($environment, $database, $backup, $input, $output);
 	}
 
 	/**

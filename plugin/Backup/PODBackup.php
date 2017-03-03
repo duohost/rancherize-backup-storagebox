@@ -17,6 +17,26 @@ class PODBackup implements Backup {
 	private $key;
 
 	/**
+	 * @var string
+	 */
+	private $dockerCompose;
+
+	/**
+	 * @var string
+	 */
+	private $rancherCompose;
+
+	/**
+	 * @var string
+	 */
+	private $serviceName;
+
+	/**
+	 * @var string
+	 */
+	private $stackName;
+
+	/**
 	 * @return string
 	 */
 	public function getKey() {
@@ -43,4 +63,62 @@ class PODBackup implements Backup {
 	public function setKey(string $key) {
 		$this->key = $key;
 	}
+
+	/**
+	 * @return string
+	 */
+	public function getRancherCompose(): string {
+		return $this->rancherCompose;
+	}
+
+	/**
+	 * @param string $rancherCompose
+	 */
+	public function setRancherCompose(string $rancherCompose) {
+		$this->rancherCompose = $rancherCompose;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getDockerCompose(): string {
+		return $this->dockerCompose;
+	}
+
+	/**
+	 * @param string $dockerCompose
+	 */
+	public function setDockerCompose(string $dockerCompose) {
+		$this->dockerCompose = $dockerCompose;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getServiceName(): string {
+		return $this->serviceName;
+	}
+
+	/**
+	 * @param string $serviceName
+	 */
+	public function setServiceName(string $serviceName) {
+		$this->serviceName = $serviceName;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getStackName(): string {
+		return $this->stackName;
+	}
+
+	/**
+	 * @param string $stackName
+	 */
+	public function setStackName(string $stackName) {
+		$this->stackName = $stackName;
+	}
+
+
 }

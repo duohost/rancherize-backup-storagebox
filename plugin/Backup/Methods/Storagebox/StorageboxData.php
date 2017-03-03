@@ -3,6 +3,7 @@
 use Rancherize\Configuration\Configuration;
 use Rancherize\Docker\DockerfileParser\DockerComposeParserVersion;
 use Rancherize\RancherAccess\RancherAccount;
+use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Database\Database;
 
 /**
@@ -10,6 +11,11 @@ use RancherizeBackupStoragebox\Database\Database;
  * @package RancherizeBackupStoragebox\Backup\Methods\Storagebox
  */
 class StorageboxData {
+
+	/**
+	 * @var Backup
+	 */
+	protected $backup;
 
 	/**
 	 * @var string
@@ -357,5 +363,19 @@ class StorageboxData {
 	 */
 	public function setNewMysqlVolumeName(string $newMysqlVolumeName) {
 		$this->newMysqlVolumeName = $newMysqlVolumeName;
+	}
+
+	/**
+	 * @return Backup
+	 */
+	public function getBackup(): Backup {
+		return $this->backup;
+	}
+
+	/**
+	 * @param Backup $backup
+	 */
+	public function setBackup(Backup $backup) {
+		$this->backup = $backup;
 	}
 }

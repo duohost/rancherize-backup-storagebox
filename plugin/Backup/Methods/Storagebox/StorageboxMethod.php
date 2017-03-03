@@ -192,16 +192,19 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 	/**
 	 * @param string $environment
 	 * @param Database $database
-	 * @param string $backup
+	 * @param Backup $backup
 	 * @param InputInterface $input
 	 * @param OutputInterface $output
 	 */
-	public function restore(string $environment, Database $database, string $backup, InputInterface $input, OutputInterface $output) {
+	public function restore(string $environment, Database $database, Backup $backup, InputInterface $input, OutputInterface $output) {
+
+		$backupKey = $backup->getKey();
 
 		$data = new StorageboxData();
+		$data->setBackup($backup);
 		$data->setEnvironmentName($environment);
 		$data->setDatabase($database);
-		$data->setBackupKey($backup);
+		$data->setBackupKey($backupKey);
 		$data->setConfiguration($this->configuration);
 
 		foreach ($this->collectors as $collector) {
@@ -214,7 +217,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$dockerCompose = [
 			'version' => '2',
 			'services' => array_merge(
-				[$data->getDatabase()->getService() => $data->getService()],
+				[$data->getBackup()->getServiceName() => $data->getService()],
 				$data->getSidekicks()
 			)
 		];
@@ -222,7 +225,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 
 		// TODO: Allow to set as option. If not set: ask user
 		$regex = '~$~';
-		$replacement = '-'.$backup;
+		$replacement = '-'.$backupKey;
 
 		foreach($this->modifiers as $modifier) {
 			if($modifier instanceof RequiresReplacementRegex)
@@ -241,7 +244,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			->setOutput( $output )
 			->setProcessHelper( $this->processHelper );
 		$workDirectory = getcwd() . '/.rancherize';
-		$stackName = $data->getDatabase()->getStack();
+		$stackName = $data->getBackup()->getStackName();
 		$newServiceName = $data->getNewServiceName();
 		$output->writeln("Starting $newServiceName.");
 		$this->rancherService->start($workDirectory, $stackName);
@@ -329,7 +332,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$restoreService = new Service();
 		$restoreService->setImage('ipunktbs/xtrabackup:0.2.1');
 		$restoreService->setName($data->getNewServiceName().'-restore');
-		$restoreService->setCommand('restore '.$backup);
+		$restoreService->setCommand('restore '.$backupKey);
 		$restoreService->setRestart(Service::RESTART_START_ONCE);
 		// Start on the same server as
 		$restoreService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}");
