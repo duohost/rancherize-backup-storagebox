@@ -41,7 +41,7 @@ use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\Ss
 use RancherizeBackupStoragebox\Database\Database;
 use RancherizeBackupStoragebox\General\Helper\RequiresProcessHelper;
 use RancherizeBackupStoragebox\General\Helper\RequiresQuestionHelper;
-use RancherizeBackupStoragebox\Storagebox\AccessMethods\AccessMethodFactory;
+use RancherizeBackupStoragebox\Storagebox\AccessMethods\Factory\AccessMethodFactory;
 use RancherizeBackupStoragebox\Storagebox\Repository\StorageboxRepository;
 use Symfony\Component\Console\Helper\ProcessHelper;
 use Symfony\Component\Console\Helper\QuestionHelper;
