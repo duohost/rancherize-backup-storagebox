@@ -1,7 +1,7 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox;
 
 use Rancherize\Configuration\Configuration;
-use Rancherize\Docker\DockerfileParser\DockerComposeParserVersion;
+use Rancherize\Docker\DockerComposeParser\DockerComposeParserVersion;
 use Rancherize\RancherAccess\RancherAccount;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Database\Database;
