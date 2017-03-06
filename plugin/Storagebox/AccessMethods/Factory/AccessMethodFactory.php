@@ -1,4 +1,4 @@
-<?php namespace RancherizeBackupStoragebox\Storagebox\AccessMethods;
+<?php namespace RancherizeBackupStoragebox\Storagebox\AccessMethods\Factory;
 
 /**
  * Interface AccessMethodFactory

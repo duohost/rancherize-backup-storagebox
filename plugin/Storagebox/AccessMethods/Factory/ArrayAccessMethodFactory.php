@@ -1,7 +1,6 @@
 <?php namespace RancherizeBackupStoragebox\Storagebox\AccessMethods\Factory;
 use Closure;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\AccessMethod;
-use RancherizeBackupStoragebox\Storagebox\AccessMethods\AccessMethodFactory;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\Exceptions\AccessFieldMissingException;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\Exceptions\AccessMethodNotFoundException;
 use RancherizeBackupStoragebox\Storagebox\AccessMethods\Methods\SFTP\SFTPAccessMethod;
