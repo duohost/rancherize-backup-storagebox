@@ -16,7 +16,7 @@ class SidekickCollector implements InformationCollector {
 	 * @return
 	 */
 	public function collect(InputInterface $input, OutputInterface $output, &$data) {
-		$databaseService = $data->getDatabase()->getService();
+		$databaseService = $data->getBackup()->getServiceName();
 		$composeParser = $data->getComposeParser();
 		$service = $data->getService();
 		$composeData = $data->getComposeData();
