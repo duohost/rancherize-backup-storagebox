@@ -74,7 +74,14 @@ class SFTPConnection {
 		$stream = @fopen("ssh2.sftp://".intval($sftp)."$remote_file", 'r');
 		if (! $stream)
 			throw new Exception("Could not open file: $remote_file");
-		$contents = fread($stream, filesize("ssh2.sftp://".intval($sftp)."$remote_file"));
+
+		$contents = '';
+		$fileSize = filesize("ssh2.sftp://" . intval($sftp) . "$remote_file");
+		//  Maximum Chunk size is usualy 8192 bytes. If the file is longer than that multiple reads are necessary.
+		while(!feof($stream)) {
+			$contents .= @fread($stream, $fileSize);
+		}
+
 		@fclose($stream);
 		return $contents;
 	}
