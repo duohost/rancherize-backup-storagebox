@@ -17,9 +17,7 @@ class Provider implements \Rancherize\Plugin\Provider {
 	use ProviderTrait;
 
 	public function register() {
-		$this->app->add( new BackupListCommand() );
-		$this->app->add( new BackupRestoreCommand() );
-		$container = container();
+		$container = $this->container;
 
 		$container['database-parser'] = function() {
 			return new DatabaseParser();
@@ -33,9 +31,11 @@ class Provider implements \Rancherize\Plugin\Provider {
 			return new ArrayBackupMethodFactory();
 		};
 
-		$container['storagebox-service'] = function($c) {
-			return new StorageboxService($c['database-repository'], $c['restore-method-factory'], $c['docker-compose-reader'], $c['docker-compose-versionizer']);
+		$f = function($c) {
+			return new StorageboxService($c['database-repository'], $c['restore-method-factory']);
 		};
+		$container['storagebox-service'] = $f;
+		$container[StorageboxService::class] = $f;
 
 		$container['storagebox-parser'] = function() {
 			return new StorageboxParser();
@@ -56,8 +56,19 @@ class Provider implements \Rancherize\Plugin\Provider {
 				$c['infrastructure-writer']
 			);
 		};
+
+		$container[BackupListCommand::class] = function ( $c ) {
+			return new BackupListCommand( $c[StorageboxService::class] );
+		};
+		$container[BackupRestoreCommand::class] = function( $c ) {
+			return new BackupRestoreCommand($c[StorageboxService::class]);
+		};
 	}
 
 	public function boot() {
+		$container = $this->container;
+
+		$this->app->add( $container[BackupListCommand::class] );
+		$this->app->add( $container[BackupRestoreCommand::class] );
 	}
 }
