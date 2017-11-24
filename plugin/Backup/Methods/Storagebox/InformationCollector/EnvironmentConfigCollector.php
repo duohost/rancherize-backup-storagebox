@@ -1,5 +1,5 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector;
-use Rancherize\Configuration\Traits\EnvironmentConfigurationTrait;
+use Rancherize\Configuration\Services\EnvironmentConfigurationService;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\StorageboxData;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -10,7 +10,14 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class EnvironmentConfigCollector implements InformationCollector {
 
-	use EnvironmentConfigurationTrait;
+	/**
+	 * @var EnvironmentConfigurationService
+	 */
+	private $environmentConfigurationService;
+
+	public function __construct( EnvironmentConfigurationService $environmentConfigurationService) {
+		$this->environmentConfigurationService = $environmentConfigurationService;
+	}
 
 	/**
 	 * @param InputInterface $input
@@ -22,7 +29,7 @@ class EnvironmentConfigCollector implements InformationCollector {
 		$environment = $data->getEnvironmentName();
 		$configuration = $data->getConfiguration();
 
-		$environmentConfig = $this->environmentConfig($configuration, $environment);
+		$environmentConfig = $this->environmentConfigurationService->environmentConfig($configuration, $environment);
 		$data->setEnvironmentConfig($environmentConfig);
 	}
 }

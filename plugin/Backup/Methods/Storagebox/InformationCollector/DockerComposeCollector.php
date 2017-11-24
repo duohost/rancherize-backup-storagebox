@@ -12,7 +12,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class DockerComposeCollector implements InformationCollector {
 
-	use RancherTrait;
 	/**
 	 * @var DockerComposeReader
 	 */

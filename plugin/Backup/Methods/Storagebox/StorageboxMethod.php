@@ -131,8 +131,8 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->byKeyService = $byKeyService;
 
 		$this->collectors = [
-			new EnvironmentConfigCollector(),
-			new RancherAccountCollector(),
+			container(EnvironmentConfigCollector::class),
+			container(RancherAccountCollector::class),
 			new DockerComposeCollector($composeReader, $rancherReader),
 			new DockerComposeVersionCollector($composerVersionizer),
 			new ServiceCollector(),
