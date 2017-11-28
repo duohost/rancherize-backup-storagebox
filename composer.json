@@ -18,7 +18,7 @@
 		"rancherize-provider": "RancherizeBackupStoragebox\\Provider"
 	 },
     "require": {
-        "ipunkt/rancherize": "^2.3.1"
+        "ipunkt/rancherize": "^2.18.4"
     },
     "require-dev": {
     }

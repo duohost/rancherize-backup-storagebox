@@ -27,7 +27,7 @@ class ArrayBackupMethodFactory implements BackupMethodFactory {
 				/**
 				 * @var StorageboxMethod $method
 				 */
-				$method = container('storagebox-method');
+				$method = container(StorageboxMethod::class);
 
 				if(in_array('box', $backupData))
 					throw new StorageboxFieldMissingException('box', $backupData);

@@ -32,11 +32,9 @@ class RancherAccountCollector implements InformationCollector {
 		$configuration = $data->getConfiguration();
 		$environmentConfig = $data->getEnvironmentConfig();
 
-		$rancherConfiguration = $this->rancherAccessService;
-		if($rancherConfiguration instanceof RancherAccessParsesConfiguration)
-			$rancherConfiguration->parse($configuration);
-
-		$rancherAccount = $rancherConfiguration->getAccount( $environmentConfig->get('rancher.account') );
+		if( $this->rancherAccessService instanceof RancherAccessParsesConfiguration)
+			$this->rancherAccessService->parse($configuration);
+		$rancherAccount = $this->rancherAccessService->getAccount( $environmentConfig->get('rancher.account') );
 
 		$data->setRancherAccount($rancherAccount);
 	}

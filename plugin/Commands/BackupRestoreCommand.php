@@ -1,5 +1,6 @@
 <?php namespace RancherizeBackupStoragebox\Commands;
 
+use Rancherize\Configuration\LoadsConfiguration;
 use Rancherize\Configuration\Traits\LoadsConfigurationTrait;
 use RancherizeBackupStoragebox\Storagebox\Service\StorageboxService;
 use Symfony\Component\Console\Command\Command;
@@ -11,7 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Class BackupRestoreCommand
  * @package RancherizeBackupStoragebox\Commands
  */
-class BackupRestoreCommand extends Command {
+class BackupRestoreCommand extends Command implements LoadsConfiguration  {
 
 	use LoadsConfigurationTrait;
 	/**
@@ -51,7 +52,7 @@ class BackupRestoreCommand extends Command {
 		$environment = $input->getArgument('environment');
 		$backup = $input->getArgument('restore');
 
-		$configuration = $this->loadConfiguration();
+		$configuration = $this->getConfiguration();
 		$this->storageboxService->setQuestionHelper( $this->getHelper('question') );
 		$this->storageboxService->setProcessHelper( $this->getHelper('process') );
 		$this->storageboxService->restore($environment, $backup, $configuration, $input, $output);
