@@ -194,6 +194,126 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			$collector->collect($input, $output, $data);
 		}
 
+		$restoreService = $this->startRestoreService($data, $backupKey, $database, $output);
+
+		$this->startNewService($restoreService, $data, $backupKey, $output);
+
+		$this->startPmaService($data, $output);
+
+		$commandServices = [
+			$restoreService,
+		];
+		$this->removeCommandServices($data, $commandServices, $output);
+
+		$backupData = $database->getBackupData();
+		if( array_key_exists('pma-url', $backupData) )
+			$output->writeln( [
+				"PMA is active. You may use it on: ".$backupData['pma-url'].'.'
+			]);
+	}
+
+	/**
+	 * @param $questionHelper
+	 */
+	public function setQuestionHelper(QuestionHelper $questionHelper) {
+		$this->questionHelper = $questionHelper;
+	}
+
+	/**
+	 * @param ProcessHelper $processHelper
+	 */
+	public function setProcessHelper(ProcessHelper $processHelper) {
+		$this->processHelper = $processHelper;
+	}
+
+	/**
+	 * @param StorageboxData $data
+	 * @return Volume
+	 */
+	private function makeVolume(StorageboxData $data) {
+
+		$mySqlVolume = new Volume();
+		$mySqlVolume->setName( $data->getNewMysqlVolumeName() );
+		$mySqlVolume->setDriver( 'local' );
+
+		return $mySqlVolume;
+	}
+
+	/**
+	 * @param Database $database
+	 * @return Volume
+	 */
+	private function makeBackupVolume( Database $database) {
+		$backupVolume = new Volume();
+
+		$backupData = $database->getBackupData();
+		if( !array_key_exists('volume', $backupData) )
+			throw new ConfigurationNotFoundException('backup.volume');
+		if( !array_key_exists('volume-driver', $backupData) )
+			throw new ConfigurationNotFoundException('backup.volume-driver');
+
+		$backupVolumeName = $backupData['volume'];
+		$backupVolumeDriver = $backupData['volume-driver'];
+
+		$backupVolume->setName( $backupVolumeName );
+		$backupVolume->setDriver( $backupVolumeDriver );
+		$backupVolume->setExternal(false);
+
+		return $backupVolume;
+	}
+
+	/**
+	 * Start the restore service
+	 *
+	 * @param StorageboxData $data
+	 * @param string $backupKey
+	 * @param Database $database
+	 * @param OutputInterface $output
+	 * @return Service
+	 */
+	private function startRestoreService( StorageboxData $data, $backupKey, Database $database, OutputInterface $output) {
+		$stackName = $data->getBackup()->getStackName();
+
+		$restoreService = new Service();
+		$restoreService->setImage('ipunktbs/xtrabackup:gvvs');
+		$restoreService->setName('restore-'.$backupKey);
+		$restoreService->setCommand('restore '.$backupKey);
+		$restoreService->setRestart(Service::RESTART_START_ONCE);
+		// No 2 services on the same host
+		$restoreService->addLabel('io.rancher.scheduler.affinity:container_label_ne', 'io.rancher.stack_service.name=$${stack_name}/$${service_name}');
+
+		$mysqlVolume = $this->makeVolume($data);
+		$backupVolume = $this->makeBackupVolume($database);
+		$restoreService->addVolume( $mysqlVolume, '/var/lib/mysql' );
+		$restoreService->addVolume( $backupVolume, '/target' );
+
+
+		$restoreInfrastructure = new Infrastructure();
+		$restoreInfrastructure->addService($restoreService);
+
+		$this->infrastructureWriter->setPath( $this->getWorkDirectory() )
+			->setSkipClear(false)
+			->write($restoreInfrastructure, new FileWriter());
+		$output->writeln("Starting ".$restoreService->getName().".");
+		$this->rancherService->start( $this->getWorkDirectory(), $stackName);
+		$output->writeln("Waiting for ".$restoreService->getName()." to finish.");
+		$this->rancherService->wait($stackName, $restoreService->getName(), new HealthStateMatcher('started-once') );
+		$output->writeln($restoreService->getName()." finished.");
+
+		return $restoreService;
+	}
+
+	/**
+	 * Start the new service
+	 * @param Service $restoreService
+	 * @param StorageboxData $data
+	 * @param $backupKey
+	 * @param OutputInterface $output
+	 */
+	private function startNewService(Service $restoreService,StorageboxData $data, $backupKey, OutputInterface $output) {
+		$stackName = $data->getBackup()->getStackName();
+		$restoreServiceName = $restoreService->getName();
+
 		$dockerCompose = [
 			'version' => '2',
 			'services' => array_merge(
@@ -214,6 +334,19 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			$modifier->modify($dockerCompose, $rancherCompose, $data);
 		}
 
+		// Start on the same server as the restore service
+		$compose = &$dockerCompose;
+		foreach([
+			        'services',
+			        $data->getBackup()->getServiceName(),
+			        'labels',
+		        ] as $key) {
+			if( !array_key_exists($key, $compose) )
+				$compose[$key] = [];
+			$compose = &$compose[$key];
+		}
+		$dockerCompose['services'][$data->getBackup()->getServiceName()]['labels']['io.rancher.scheduler.affinity:container_label_soft'] = "io.rancher.stack_service.name=${stackName}/${restoreServiceName}";
+
 		$dockerFileContent = Yaml::dump($dockerCompose, 100, 2);
 		$this->buildService->createDockerCompose($dockerFileContent);
 
@@ -223,135 +356,19 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$this->rancherService->setAccount( $data->getRancherAccount() )
 			->setOutput( $output )
 			->setProcessHelper( $this->processHelper );
-		$workDirectory = getcwd() . '/.rancherize';
+
 		$stackName = $data->getBackup()->getStackName();
 		$newServiceName = $data->getNewServiceName();
 		$output->writeln("Starting $newServiceName.");
-		$this->rancherService->start($workDirectory, $stackName);
+		$this->rancherService->start( $this->getWorkDirectory(), $stackName);
 		$output->writeln("Waiting for $newServiceName to start.");
 		$this->rancherService->wait($stackName, $newServiceName, new SingleStateMatcher('active') );
 		$output->writeln("$newServiceName Started.");
-		$output->writeln("Stopping $newServiceName.");
-		$this->rancherService->stop($workDirectory, $stackName);
-		$output->writeln("Waiting for $newServiceName to stop.");
-		$this->rancherService->wait($stackName, $newServiceName, new SingleStateMatcher('inactive') );
-		$output->writeln("$newServiceName Stopped.");
+	}
 
-		$clearService = new Service();
-		$clearService->setName($data->getNewServiceName().'-clear');
-		$clearService->setImage('ipunktbs/xtrabackup:0.2.1');
-		$clearService->setCommand('clear yes');
-		$newDataSidekick = $data->getNewMysqlVolumeService();
-		$newMysqlVolume = $data->getNewMysqlVolumeName();
-
-		/*
-		 * TODO: Move to clear service
-		 */
-		$clearService->setRestart(Service::RESTART_START_ONCE);
-		// Start on the same server as
-		$clearService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}");
-		// No 2 services on the same host
-		$clearService->addLabel('io.rancher.scheduler.affinity:container_label_ne', 'io.rancher.stack_service.name=$${stack_name}/$${service_name}');
-		$clearService->addVolume($newMysqlVolume, '/var/lib/mysql');
-		$volume = new Volume();
-		$volume->setName($newMysqlVolume);
-		$volume->setDriver('local');
-
-		$clearInfrastructure = new Infrastructure();
-		$clearInfrastructure->addService($clearService);
-		$clearInfrastructure->addVolume($volume);
-
-		$this->infrastructureWriter->setPath($workDirectory)
-			->setSkipClear(false)
-			->write($clearInfrastructure, new FileWriter());
-
-		$output->writeln("Starting ".$clearService->getName().".");
-		$this->rancherService->start($workDirectory, $stackName);
-		$output->writeln("Waiting for ".$clearService->getName()." to finish.");
-		$this->rancherService->wait($stackName, $clearService->getName(), new HealthStateMatcher('started-once') );
-		$output->writeln($clearService->getName()." finished.");
-		/*
-		 * TODO: /Move to clear service
-		 */
-
-		$backupData = $database->getBackupData();
-		if( !array_key_exists('volume', $backupData) )
-			throw new ConfigurationNotFoundException('backup.volume');
-		if( !array_key_exists('volume-driver', $backupData) )
-			throw new ConfigurationNotFoundException('backup.volume');
-		$backupVolumeName = $backupData['volume'];
-		$backupVolumeDriver = $backupData['volume-driver'];
-
-		/*
-		 * Ensure backup volume is available
-		 */
-		$volumeCreateInfrastructure = new Infrastructure();
-		$volumeCreateService = new Service();
-		$volumeCreateService->setName($data->getNewServiceName().'-volume');
-		$volumeCreateService->setImage('area51/docker-client');
-		$volumeCreateService->setCommand("docker volume create --driver=${backupVolumeDriver} --name=${backupVolumeName}");
-		$volumeCreateService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}");
-		$volumeCreateService->addLabel('io.rancher.scheduler.affinity:container_label_ne', 'io.rancher.stack_service.name=$${stack_name}/$${service_name}');
-		$volumeCreateService->addVolume('/var/run/docker.sock', '/var/run/docker.sock');
-		$volumeCreateService->setRestart(Service::RESTART_START_ONCE);
-		$volumeCreateInfrastructure->addService($volumeCreateService);
-		$this->infrastructureWriter->setPath($workDirectory)
-			->setSkipClear(false)
-			->write($volumeCreateInfrastructure, new FileWriter());
-
-		$output->writeln("Starting ".$volumeCreateService->getName().".");
-		$this->rancherService->start($workDirectory, $stackName);
-		$output->writeln("Waiting for ".$volumeCreateService->getName()." to finish.");
-		$this->rancherService->wait($stackName, $volumeCreateService->getName(), new HealthStateMatcher('started-once') );
-		$output->writeln($volumeCreateService->getName()." finished.");
-
-		/*
-		 * TODO: Move to restore service
-		 */
-
-		$restoreService = new Service();
-		$restoreService->setImage('ipunktbs/xtrabackup:0.2.1');
-		$restoreService->setName($data->getNewServiceName().'-restore');
-		$restoreService->setCommand('restore '.$backupKey);
-		$restoreService->setRestart(Service::RESTART_START_ONCE);
-		// Start on the same server as
-		$restoreService->addLabel('io.rancher.scheduler.affinity:container_label', "io.rancher.stack_service.name=${stackName}/${newServiceName}/${newDataSidekick}");
-		// No 2 services on the same host
-		$restoreService->addLabel('io.rancher.scheduler.affinity:container_label_ne', 'io.rancher.stack_service.name=$${stack_name}/$${service_name}');
-		$restoreService->addVolume( $newMysqlVolume, '/var/lib/mysql' );
-		$restoreService->addVolume( $backupVolumeName, '/target' );
-
-		$backupVolume = new Volume();
-		$backupVolume->setName( $backupVolumeName );
-		$backupVolume->setDriver( $backupVolumeDriver );
-		$backupVolume->setExternal( true );
-
-		$restoreInfrastructure = new Infrastructure();
-		$restoreInfrastructure->addService($restoreService);
-		$restoreInfrastructure->addVolume($volume);
-		$restoreInfrastructure->addVolume($backupVolume);
-
-		$this->infrastructureWriter->setPath($workDirectory)
-			->setSkipClear(false)
-			->write($restoreInfrastructure, new FileWriter());
-		$output->writeln("Starting ".$restoreService->getName().".");
-		$this->rancherService->start($workDirectory, $stackName);
-		$output->writeln("Waiting for ".$restoreService->getName()." to finish.");
-		$this->rancherService->wait($stackName, $restoreService->getName(), new HealthStateMatcher('started-once') );
-		$output->writeln($restoreService->getName()." finished.");
-		/*
-		 * TODO: /Move to restore service
-		 */
-
-		// TODO: move to builder service and just call again
-		$dockerFileContent = Yaml::dump($dockerCompose, 100, 2);
-		$this->buildService->createDockerCompose($dockerFileContent);
-
-		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
-		$this->buildService->createRancherCompose($rancherFileContent);
-
-		$output->writeln("Starting $newServiceName.");
-		$this->rancherService->start($workDirectory, $stackName);
+	private function startPmaService(StorageboxData $data, OutputInterface $output) {
+		$stackName = $data->getBackup()->getStackName();
+		$newServiceName = $data->getNewServiceName();
 
 		// TODO: add PMA
 		$pmaService = new Service();
@@ -367,56 +384,45 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 
 		$pmaInfrastructure = new Infrastructure();
 		$pmaInfrastructure->addService($pmaService);
-		$pmaInfrastructure->addVolume($volume);
-		$pmaInfrastructure->addVolume($backupVolume);
 
-		$this->infrastructureWriter->setPath($workDirectory)
+		$this->infrastructureWriter->setPath( $this->getWorkDirectory() )
 			->setSkipClear(false)
 			->write($pmaInfrastructure, new FileWriter());
 		$output->writeln("Starting ".$pmaService->getName().".");
-		$this->rancherService->start($workDirectory, $stackName);
+		$this->rancherService->start( $this->getWorkDirectory(), $stackName);
+
+		$output->writeln("Waiting for pma to become active");
+		$this->rancherService->wait($stackName, $newServiceName, new SingleStateMatcher('active') );
+
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function getWorkDirectory() {
+		return getcwd() . '/.rancherize';
+	}
+
+	/**
+	 * @param StorageboxData $data
+	 * @param Service[] $commandServices
+	 * @param OutputInterface $output
+	 */
+	private function removeCommandServices( StorageboxData $data, $commandServices, OutputInterface $output ) {
+		$stackName = $data->getBackup()->getStackName();
 
 		$rmInfrastructure = new Infrastructure();
-		$commandServices = [
-			$clearService,
-			$restoreService,
-			$volumeCreateService
-		];
 		$commandServiceNames = [];
 		foreach($commandServices as $commandService) {
 			$rmInfrastructure->addService($commandService);
 			$commandServiceNames[] = $commandService->getName();
 		}
-		$rmInfrastructure->addVolume($volume);
-		$rmInfrastructure->addVolume($backupVolume);
 
-		$this->infrastructureWriter->setPath($workDirectory)
+		$this->infrastructureWriter->setPath( $this->getWorkDirectory() )
 			->setSkipClear(false)
 			->write($rmInfrastructure, new FileWriter());
 
-		$output->writeln("Starting cleanup up command services ".implode(', ', $commandServiceNames).'.');
-		$this->rancherService->rm($workDirectory, $stackName, $commandServiceNames);
-
-		$output->writeln("Waiting for pma to become active");
-		$this->rancherService->wait($stackName, $newServiceName, new SingleStateMatcher('active') );
-		if( array_key_exists('pma-url', $backupData) )
-			$output->writeln( [
-				"PMA is active. You may use it on: ".$backupData['pma-url'].'.',
-				'Note that it may take around 2 minutes before a load balancer notices the new pma service.',
-			]);
-	}
-
-	/**
-	 * @param $questionHelper
-	 */
-	public function setQuestionHelper(QuestionHelper $questionHelper) {
-		$this->questionHelper = $questionHelper;
-	}
-
-	/**
-	 * @param ProcessHelper $processHelper
-	 */
-	public function setProcessHelper(ProcessHelper $processHelper) {
-		$this->processHelper = $processHelper;
+		$output->writeln("Starting cleaning up command services ".implode(', ', $commandServiceNames).'.');
+		$this->rancherService->rm( $this->getWorkDirectory(), $stackName, $commandServiceNames);
 	}
 }
