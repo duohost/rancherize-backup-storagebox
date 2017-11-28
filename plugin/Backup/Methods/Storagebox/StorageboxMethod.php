@@ -5,12 +5,7 @@ use Rancherize\Blueprint\Infrastructure\InfrastructureWriter;
 use Rancherize\Blueprint\Infrastructure\Service\Service;
 use Rancherize\Blueprint\Infrastructure\Volume\Volume;
 use Rancherize\Configuration\Configuration;
-use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
-use Rancherize\Docker\DockerComposerVersionizer;
-use Rancherize\Docker\RancherComposeReader\RancherComposeReader;
 use Rancherize\File\FileWriter;
-use Rancherize\General\Services\ByKeyService;
-use Rancherize\General\Services\NameIsPathChecker;
 use Rancherize\RancherAccess\HealthStateMatcher;
 use Rancherize\RancherAccess\RancherService;
 use Rancherize\RancherAccess\SingleStateMatcher;
@@ -69,11 +64,6 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 	private $methodFactory;
 
 	/**
-	 * @var ByKeyService
-	 */
-	private $byKeyService;
-
-	/**
 	 * @var QuestionHelper
 	 */
 	private $questionHelper;
@@ -109,48 +99,38 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 	 * StorageboxMethod constructor.
 	 * @param StorageboxRepository $repository
 	 * @param AccessMethodFactory $methodFactory
-	 * @param DockerComposeReader $composeReader
-	 * @param RancherComposeReader $rancherReader
-	 * @param DockerComposerVersionizer $composerVersionizer
-	 * @param ByKeyService $byKeyService
 	 * @param BuildService $buildService
 	 * @param RancherService $rancherService
-	 * @param NameIsPathChecker $nameIsPathChecker
 	 * @param InfrastructureWriter $infrastructureWriter
 	 */
 	public function __construct(StorageboxRepository $repository, AccessMethodFactory $methodFactory,
-							DockerComposeReader $composeReader, RancherComposeReader $rancherReader,
-							DockerComposerVersionizer $composerVersionizer,
-							ByKeyService $byKeyService, BuildService $buildService, RancherService $rancherService,
-							NameIsPathChecker $nameIsPathChecker,
-							// TODO: Move populating the collectors and modifiers outside into the container function -> dependencies don't have to pass through here
+							BuildService $buildService, RancherService $rancherService,
 							InfrastructureWriter $infrastructureWriter
 	) {
 		$this->repository = $repository;
 		$this->methodFactory = $methodFactory;
-		$this->byKeyService = $byKeyService;
 
 		$this->collectors = [
-			new EnvironmentConfigCollector(),
-			new RancherAccountCollector(),
-			new DockerComposeCollector($composeReader, $rancherReader),
-			new DockerComposeVersionCollector($composerVersionizer),
-			new ServiceCollector(),
-			new SidekickCollector(),
-			new RootPasswordCollector($byKeyService),
-			new SstPasswordCollector($byKeyService),
-			new NamedVolumeCollector(),
+			container(EnvironmentConfigCollector::class),
+			container(RancherAccountCollector::class ),
+			container(DockerComposeCollector::class),
+			container(DockerComposeVersionCollector::class),
+			container(ServiceCollector::class),
+			container(SidekickCollector::class),
+			container(RootPasswordCollector::class),
+			container( SstPasswordCollector::class ),
+			container( NamedVolumeCollector::class ),
 		];
 
 		$this->modifiers = [
-			new FilterSidekicksModifier(),
-			new ServiceNameModifier(),
-			new SidekickNameModifier(),
-			new VolumesFromNameModifier(),
-			new ScaleDownModifier(),
-			new VolumeNameModifier($nameIsPathChecker),
-			new VolumesEntryModifier(),
-			new ContainerNetModifier(),
+			container(FilterSidekicksModifier::class),
+			container(ServiceNameModifier::class),
+			container(SidekickNameModifier::class),
+			container(VolumesFromNameModifier::class),
+			container(ScaleDownModifier::class),
+			container(VolumeNameModifier::class),
+			container(VolumesEntryModifier::class),
+			container(ContainerNetModifier::class),
 		];
 		$this->buildService = $buildService;
 		$this->rancherService = $rancherService;
