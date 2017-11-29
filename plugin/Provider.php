@@ -25,6 +25,7 @@ use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\Do
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\DockerComposeVersionCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\EnvironmentConfigCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\NamedVolumeCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\NewNamesCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RancherAccountCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RootPasswordCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\ServiceCollector;
@@ -135,6 +136,10 @@ class Provider implements \Rancherize\Plugin\Provider {
 
 		$container[NamedVolumeCollector::class] = function () {
 			return new NamedVolumeCollector();
+		};
+
+		$container[NewNamesCollector::class] = function() {
+			return new NewNamesCollector();
 		};
 
 		/***************************************************************

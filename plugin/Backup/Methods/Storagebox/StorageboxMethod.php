@@ -1,9 +1,13 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox;
 
+use Rancherize\Blueprint\Healthcheck\HealthcheckConfigurationToService\HealthcheckConfigurationToService;
 use Rancherize\Blueprint\Infrastructure\Infrastructure;
 use Rancherize\Blueprint\Infrastructure\InfrastructureWriter;
 use Rancherize\Blueprint\Infrastructure\Service\Service;
-use Rancherize\Blueprint\Infrastructure\Volume\Volume;
+use Rancherize\Blueprint\Infrastructure\Service\Volume;
+use Rancherize\Blueprint\PublishUrls\PublishUrlsParser\PublishUrlsParser;
+use Rancherize\Blueprint\Scheduler\SchedulerParser\SchedulerParser;
+use Rancherize\Configuration\ArrayConfiguration;
 use Rancherize\Configuration\Configuration;
 use Rancherize\File\FileWriter;
 use Rancherize\RancherAccess\HealthStateMatcher;
@@ -28,6 +32,7 @@ use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\Do
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\EnvironmentConfigCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\InformationCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\NamedVolumeCollector;
+use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\NewNamesCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RancherAccountCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\RootPasswordCollector;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector\ServiceCollector;
@@ -118,8 +123,9 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			container(ServiceCollector::class),
 			container(SidekickCollector::class),
 			container(RootPasswordCollector::class),
-			container( SstPasswordCollector::class ),
-			container( NamedVolumeCollector::class ),
+			container(SstPasswordCollector::class ),
+			container(NamedVolumeCollector::class ),
+			container(NewNamesCollector::class ),
 		];
 
 		$this->modifiers = [
@@ -194,6 +200,10 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 			$collector->collect($input, $output, $data);
 		}
 
+		$this->rancherService->setAccount( $data->getRancherAccount() )
+			->setOutput( $output )
+			->setProcessHelper( $this->processHelper );
+
 		$restoreService = $this->startRestoreService($data, $backupKey, $database, $output);
 
 		$this->startNewService($restoreService, $data, $backupKey, $output);
@@ -233,7 +243,8 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 	private function makeVolume(StorageboxData $data) {
 
 		$mySqlVolume = new Volume();
-		$mySqlVolume->setName( $data->getNewMysqlVolumeName() );
+		$mySqlVolume->setExternalPath( $data->getNewMysqlVolumeName() );
+		$mySqlVolume->setInternalPath('/var/mysql');
 		$mySqlVolume->setDriver( 'local' );
 
 		return $mySqlVolume;
@@ -247,6 +258,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$backupVolume = new Volume();
 
 		$backupData = $database->getBackupData();
+
 		if( !array_key_exists('volume', $backupData) )
 			throw new ConfigurationNotFoundException('backup.volume');
 		if( !array_key_exists('volume-driver', $backupData) )
@@ -255,9 +267,9 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$backupVolumeName = $backupData['volume'];
 		$backupVolumeDriver = $backupData['volume-driver'];
 
-		$backupVolume->setName( $backupVolumeName );
+		$backupVolume->setExternalPath( $backupVolumeName );
+		$backupVolume->setInternalPath('/target');
 		$backupVolume->setDriver( $backupVolumeDriver );
-		$backupVolume->setExternal(false);
 
 		return $backupVolume;
 	}
@@ -279,13 +291,23 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$restoreService->setName('restore-'.$backupKey);
 		$restoreService->setCommand('restore '.$backupKey);
 		$restoreService->setRestart(Service::RESTART_START_ONCE);
-		// No 2 services on the same host
-		$restoreService->addLabel('io.rancher.scheduler.affinity:container_label_ne', 'io.rancher.stack_service.name=$${stack_name}/$${service_name}');
 
 		$mysqlVolume = $this->makeVolume($data);
 		$backupVolume = $this->makeBackupVolume($database);
-		$restoreService->addVolume( $mysqlVolume, '/var/lib/mysql' );
-		$restoreService->addVolume( $backupVolume, '/target' );
+		$restoreService->addVolume( $mysqlVolume );
+		$restoreService->addVolume( $backupVolume );
+
+		/**
+		 * @var SchedulerParser $schedulerParser
+		 */
+		//$schedulerParser = container(SchedulerParser::class);
+		$schedulerParser = container('scheduler-parser');
+		$config = new ArrayConfiguration([
+			'scheduler' => [
+				'should-have-tags' => [ 'primary-restore' ]
+			]
+		]);
+		$schedulerParser->parse($restoreService, $config);
 
 
 		$restoreInfrastructure = new Infrastructure();
@@ -338,24 +360,20 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$compose = &$dockerCompose;
 		foreach([
 			        'services',
-			        $data->getBackup()->getServiceName(),
+			        $data->getNewServiceName(),
 			        'labels',
 		        ] as $key) {
 			if( !array_key_exists($key, $compose) )
 				$compose[$key] = [];
 			$compose = &$compose[$key];
 		}
-		$dockerCompose['services'][$data->getBackup()->getServiceName()]['labels']['io.rancher.scheduler.affinity:container_label_soft'] = "io.rancher.stack_service.name=${stackName}/${restoreServiceName}";
+		$dockerCompose['services'][$data->getNewServiceName()]['labels']['io.rancher.scheduler.affinity:container_label_soft'] = "io.rancher.stack_service.name=${stackName}/${restoreServiceName}";
 
 		$dockerFileContent = Yaml::dump($dockerCompose, 100, 2);
 		$this->buildService->createDockerCompose($dockerFileContent);
 
 		$rancherFileContent = Yaml::dump($rancherCompose, 100, 2);
 		$this->buildService->createRancherCompose($rancherFileContent);
-
-		$this->rancherService->setAccount( $data->getRancherAccount() )
-			->setOutput( $output )
-			->setProcessHelper( $this->processHelper );
 
 		$stackName = $data->getBackup()->getStackName();
 		$newServiceName = $data->getNewServiceName();
@@ -369,6 +387,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 	private function startPmaService(StorageboxData $data, OutputInterface $output) {
 		$stackName = $data->getBackup()->getStackName();
 		$newServiceName = $data->getNewServiceName();
+		$backupData = $data->getDatabase()->getBackupData();
 
 		// TODO: add PMA
 		$pmaService = new Service();
@@ -384,6 +403,40 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 
 		$pmaInfrastructure = new Infrastructure();
 		$pmaInfrastructure->addService($pmaService);
+
+		if( array_key_exists('pma-url', $backupData) ) {
+			$pmaUrl = $backupData['pma-url'];
+
+			$pmaDomain = parse_url($pmaUrl, PHP_URL_HOST);
+			$pmaScheme = parse_url($pmaUrl, PHP_URL_SCHEME);
+			$publishUrl = $pmaScheme.'://'.$pmaDomain;
+
+			$output->writeln( [
+				"PMA is active. You may use it on: ".$backupData['pma-url'].'.'
+			]);
+			/**
+			 * @var HealthcheckConfigurationToService $healthcheck
+			 */
+			$healthcheckConfig = [
+				'healthcheck' => [
+					'port' => 80
+				]
+			];
+			$healthcheck = container('healthcheck-parser');
+			$healthcheck->parseToService($pmaService, new ArrayConfiguration($healthcheckConfig) );
+
+			/**
+			 * @var PublishUrlsParser $publisher
+			 */
+			$publisher = container('publish-urls-parser');
+			$publishConfig = [
+				'publish' => [
+					'port' => 80,
+					'url' => $publishUrl
+				]
+			];
+			$publisher->parseToService($pmaService, new ArrayConfiguration($publishConfig) );
+		}
 
 		$this->infrastructureWriter->setPath( $this->getWorkDirectory() )
 			->setSkipClear(false)
