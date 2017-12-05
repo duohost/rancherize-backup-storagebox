@@ -287,7 +287,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 		$stackName = $data->getBackup()->getStackName();
 
 		$restoreService = new Service();
-		$restoreService->setImage('ipunktbs/xtrabackup:gvvs');
+		$restoreService->setImage('ipunktbs/xtrabackup:1.1.0');
 		$restoreService->setName('restore-'.$backupKey);
 		$restoreService->setCommand('restore '.$backupKey);
 		$restoreService->setRestart(Service::RESTART_START_ONCE);
