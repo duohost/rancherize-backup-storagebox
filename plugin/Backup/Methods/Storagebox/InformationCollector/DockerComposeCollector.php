@@ -1,5 +1,4 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox\InformationCollector;
-use Rancherize\Commands\Traits\RancherTrait;
 use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
 use Rancherize\Docker\RancherComposeReader\RancherComposeReader;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\StorageboxData;
@@ -12,7 +11,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class DockerComposeCollector implements InformationCollector {
 
-	use RancherTrait;
 	/**
 	 * @var DockerComposeReader
 	 */

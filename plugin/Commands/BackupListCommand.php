@@ -1,7 +1,8 @@
 <?php namespace RancherizeBackupStoragebox\Commands;
 
+use Rancherize\Configuration\LoadsConfiguration;
 use Rancherize\Configuration\Traits\LoadsConfigurationTrait;
-use RancherizeBackupStoragebox\Storagebox\Traits\UsesStorageboxService;
+use RancherizeBackupStoragebox\Storagebox\Service\StorageboxService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -11,10 +12,23 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Class BackupListCommand
  * @package RancherizeBackupStoragebox\Commands
  */
-class BackupListCommand extends Command {
+class BackupListCommand extends Command implements LoadsConfiguration {
 
 	use LoadsConfigurationTrait;
-	use UsesStorageboxService;
+
+	/**
+	 * @var StorageboxService
+	 */
+	private $storageboxService;
+
+	/**
+	 * BackupListCommand constructor.
+	 * @param StorageboxService $storageboxService
+	 */
+	public function __construct( StorageboxService $storageboxService ) {
+		$this->storageboxService = $storageboxService;
+		parent::__construct();
+	}
 
 	protected function configure() {
 		$this
@@ -31,11 +45,10 @@ class BackupListCommand extends Command {
 	 * @return int|null|void
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output) {
-		$configuration = $this->loadConfiguration();
+		$configuration = $this->getConfiguration();
 		$environment = $input->getArgument('environment');
 
-		$storageboxService = $this->getStorageboxService();
-		$storageboxService->list($configuration, $environment, $input, $output);
+		$this->storageboxService->list($configuration, $environment, $input, $output);
 	}
 
 

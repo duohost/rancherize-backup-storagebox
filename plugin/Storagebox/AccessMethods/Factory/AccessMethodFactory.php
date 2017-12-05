@@ -1,5 +1,7 @@
 <?php namespace RancherizeBackupStoragebox\Storagebox\AccessMethods\Factory;
 
+use RancherizeBackupStoragebox\Storagebox\AccessMethods\AccessMethod;
+
 /**
  * Interface AccessMethodFactory
  * @package RancherizeBackupStoragebox\Storagebox\AccessMethods

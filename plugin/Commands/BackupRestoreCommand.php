@@ -1,7 +1,8 @@
 <?php namespace RancherizeBackupStoragebox\Commands;
 
+use Rancherize\Configuration\LoadsConfiguration;
 use Rancherize\Configuration\Traits\LoadsConfigurationTrait;
-use RancherizeBackupStoragebox\Storagebox\Traits\UsesStorageboxService;
+use RancherizeBackupStoragebox\Storagebox\Service\StorageboxService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -11,10 +12,22 @@ use Symfony\Component\Console\Output\OutputInterface;
  * Class BackupRestoreCommand
  * @package RancherizeBackupStoragebox\Commands
  */
-class BackupRestoreCommand extends Command {
+class BackupRestoreCommand extends Command implements LoadsConfiguration  {
 
 	use LoadsConfigurationTrait;
-	use UsesStorageboxService;
+	/**
+	 * @var StorageboxService
+	 */
+	private $storageboxService;
+
+	/**
+	 * BackupRestoreCommand constructor.
+	 * @param StorageboxService $storageboxService
+	 */
+	public function __construct( StorageboxService $storageboxService) {
+		$this->storageboxService = $storageboxService;
+		parent::__construct();
+	}
 
 	/**
 	 *
@@ -39,11 +52,10 @@ class BackupRestoreCommand extends Command {
 		$environment = $input->getArgument('environment');
 		$backup = $input->getArgument('restore');
 
-		$configuration = $this->loadConfiguration();
-		$storageboxService = $this->getStorageboxService();
-		$storageboxService->setQuestionHelper( $this->getHelper('question') );
-		$storageboxService->setProcessHelper( $this->getHelper('process') );
-		$storageboxService->restore($environment, $backup, $configuration, $input, $output);
+		$configuration = $this->getConfiguration();
+		$this->storageboxService->setQuestionHelper( $this->getHelper('question') );
+		$this->storageboxService->setProcessHelper( $this->getHelper('process') );
+		$this->storageboxService->restore($environment, $backup, $configuration, $input, $output);
 
 		return 0;
 	}

@@ -3,7 +3,7 @@
 use Rancherize\Commands\Traits\IoTrait;
 use Rancherize\Configuration\Configurable;
 use Rancherize\Configuration\Configuration;
-use Rancherize\Configuration\Traits\EnvironmentConfigurationTrait;
+use Rancherize\Configuration\Services\EnvironmentConfigurationService;
 use RancherizeBackupStoragebox\Backup\Backup;
 use RancherizeBackupStoragebox\Backup\Exceptions\BackupException;
 use RancherizeBackupStoragebox\Backup\Factory\BackupMethodFactory;
@@ -22,7 +22,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 class StorageboxService {
 
 	use IoTrait;
-	use EnvironmentConfigurationTrait;
 
 	/**
 	 * @var DatabaseRepository
@@ -42,16 +41,22 @@ class StorageboxService {
 	 * @var ProcessHelper
 	 */
 	private $processHelper;
+	/**
+	 * @var EnvironmentConfigurationService
+	 */
+	private $environmentConfigurationService;
 
 	/**
 	 * StorageboxService constructor.
 	 * @param DatabaseRepository $databaseRepository
 	 * @param BackupMethodFactory $methodFactory
+	 * @param EnvironmentConfigurationService $environmentConfigurationService
 	 */
-	public function __construct(DatabaseRepository $databaseRepository, BackupMethodFactory $methodFactory
+	public function __construct(DatabaseRepository $databaseRepository, BackupMethodFactory $methodFactory, EnvironmentConfigurationService $environmentConfigurationService
 	) {
 		$this->databaseRepository = $databaseRepository;
 		$this->methodFactory = $methodFactory;
+		$this->environmentConfigurationService = $environmentConfigurationService;
 	}
 
 	/**
@@ -111,7 +116,7 @@ class StorageboxService {
 	 * @param OutputInterface $output
 	 */
 	public function restore(string $environment, string $backupKey, Configurable $configuration, InputInterface $input, OutputInterface $output) {
-		$environmentConfig = $this->environmentConfig($configuration, $environment);
+		$environmentConfig = $this->environmentConfigurationService->environmentConfig($configuration, $environment);
 		$globalDatabaseName = $environmentConfig->get('database.global', null);
 
 		if($globalDatabaseName === null) {
