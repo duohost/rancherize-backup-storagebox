@@ -92,12 +92,12 @@ services:
       BACKUP_MODE: INCREMENTAL
       MYSQL_PASSWORD: iproot
       MYSQL_USER: root
-      RANCHER_ACCESS_KEY: B09E8E8D08CF6DD22324
-      RANCHER_SECRET_KEY: rsHAF12NMwt9pdw82SQpvjBwifczQg3HW9h7GkNr
-      RANCHER_URL: https://rancher.ahgz.website:8332/v1/projects/1a5
+      RANCHER_ACCESS_KEY: xxxxxxx
+      RANCHER_SECRET_KEY: xxxxxxx
+      RANCHER_URL: .....
       RESTORE_STACK: Database-Cluster-Backups
-      STORAGEBOX_PASSWORD: Az0fNzjMvcR79aw3
-      STORAGEBOX_URL: sftp://u150607.your-backup.de/backup/
+      STORAGEBOX_PASSWORD: .....
+      STORAGEBOX_URL: ......
       STORAGEBOX_USER: u150607
     stdin_open: true
     volumes:
@@ -136,12 +136,12 @@ services:
       BACKUP_MODE: FULL
       MYSQL_PASSWORD: iproot
       MYSQL_USER: root
-      RANCHER_ACCESS_KEY: B09E8E8D08CF6DD22324
-      RANCHER_SECRET_KEY: rsHAF12NMwt9pdw82SQpvjBwifczQg3HW9h7GkNr
-      RANCHER_URL: https://rancher.ahgz.website:8332/v1/projects/1a5
+      RANCHER_ACCESS_KEY: xxxxx
+      RANCHER_SECRET_KEY: xxxxx
+      RANCHER_URL: xxxxxxxx
       RESTORE_STACK: Database-Cluster-Backups
-      STORAGEBOX_PASSWORD: Az0fNzjMvcR79aw3
-      STORAGEBOX_URL: sftp://u150607.your-backup.de/backup/
+      STORAGEBOX_PASSWORD: .....
+      STORAGEBOX_URL: .....
       STORAGEBOX_USER: u150607
     stdin_open: true
     volumes:
