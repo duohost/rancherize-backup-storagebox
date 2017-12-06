@@ -1,5 +1,4 @@
 <?php namespace RancherizeBackupStoragebox\Backup\Methods\Storagebox\FileModifier;
-use Rancherize\General\Services\NameIsPathChecker;
 use RancherizeBackupStoragebox\Backup\Methods\Storagebox\StorageboxData;
 
 /**
@@ -17,18 +16,6 @@ class VolumeNameModifier implements FileModifier, RequiresReplacementRegex {
 	 * @var string
 	 */
 	private $regex;
-	/**
-	 * @var NameIsPathChecker
-	 */
-	private $nameIsPathChecker;
-
-	/**
-	 * VolumeNameModifier constructor.
-	 * @param NameIsPathChecker $nameIsPathChecker
-	 */
-	public function __construct(NameIsPathChecker $nameIsPathChecker) {
-		$this->nameIsPathChecker = $nameIsPathChecker;
-	}
 
 	/**
 	 * Set replacement regex and value to replace it with
@@ -58,8 +45,6 @@ class VolumeNameModifier implements FileModifier, RequiresReplacementRegex {
 			foreach($volumes as $name => $path) {
 
 				if( is_int($name) )
-					continue;
-				if( $this->nameIsPathChecker->isPath($name) )
 					continue;
 
 				$newName = preg_replace($this->regex, $this->replacement, $name);

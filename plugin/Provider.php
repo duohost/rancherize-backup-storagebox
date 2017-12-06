@@ -6,7 +6,6 @@ use Rancherize\Docker\DockerComposeReader\DockerComposeReader;
 use Rancherize\Docker\DockerComposerVersionizer;
 use Rancherize\Docker\RancherComposeReader\RancherComposeReader;
 use Rancherize\General\Services\ByKeyService;
-use Rancherize\General\Services\NameIsPathChecker;
 use Rancherize\Plugin\ProviderTrait;
 use Rancherize\RancherAccess\RancherAccessService;
 use Rancherize\RancherAccess\RancherService;
@@ -165,8 +164,8 @@ class Provider implements \Rancherize\Plugin\Provider {
 			return new ScaleDownModifier();
 		};
 
-		$container[VolumeNameModifier::class] = function($c) {
-			return new VolumeNameModifier( $c[NameIsPathChecker::class] );
+		$container[VolumeNameModifier::class] = function() {
+			return new VolumeNameModifier( );
 		};
 
 		$container[VolumesEntryModifier::class] = function() {
