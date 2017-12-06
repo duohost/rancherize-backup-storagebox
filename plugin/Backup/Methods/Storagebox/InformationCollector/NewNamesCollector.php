@@ -28,6 +28,5 @@ class NewNamesCollector implements InformationCollector {
 
 		$newVolumeName = preg_replace($regex, $replacement, $data->getMysqlVolumeName());
 		$data->setNewMysqlVolumeName($newVolumeName);
-
 	}
 }

@@ -5,7 +5,8 @@
     "license": "MIT",
 	 "autoload":{
 		"psr-4": {
-			"RancherizeBackupStoragebox\\": "plugin/"
+			"RancherizeBackupStoragebox\\": "plugin/",
+            "RancherizeBackupStorageboxTests\\": "tests/"
 		}
 	 },
     "authors": [
@@ -21,5 +22,7 @@
         "ipunkt/rancherize": "^2.18.4"
     },
     "require-dev": {
+        "mockery/mockery": "^1.0",
+        "phpunit/phpunit": "^5"
     }
 }
