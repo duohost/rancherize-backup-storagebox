@@ -1,28 +1,28 @@
 {
-    "name": "ipunkt/rancherize-backup-storagebox",
-    "description": "Rancherize plugin adding backup commands for use witha a hetzner storagebox",
-    "type": "project",
-    "license": "MIT",
-	 "autoload":{
-		"psr-4": {
-			"RancherizeBackupStoragebox\\": "plugin/",
-            "RancherizeBackupStorageboxTests\\": "tests/"
-		}
-	 },
-    "authors": [
-        {
-            "name": "Sven Speckmaier",
-            "email": "sps@ipunkt.biz"
-        }
-    ],
-	 "extra":{
-		"rancherize-provider": "RancherizeBackupStoragebox\\Provider"
-	 },
-    "require": {
-        "ipunkt/rancherize": "^2.18.4"
-    },
-    "require-dev": {
-        "mockery/mockery": "^1.0",
-        "phpunit/phpunit": "^5"
+  "name": "ipunkt/rancherize-backup-storagebox",
+  "description": "Rancherize plugin adding backup commands for use witha a hetzner storagebox",
+  "type": "project",
+  "license": "MIT",
+  "autoload":{
+    "psr-4": {
+      "RancherizeBackupStoragebox\\": "plugin/",
+      "RancherizeBackupStorageboxTests\\": "tests/"
     }
+  },
+  "authors": [
+    {
+      "name": "Sven Speckmaier",
+      "email": "sps@ipunkt.biz"
+    }
+  ],
+  "require": {
+    "ipunkt/rancherize": "^2.18.4"
+  },
+  "require-dev": {
+    "mockery/mockery": "^1.0",
+    "phpunit/phpunit": "^5"
+  },
+  "extra":{
+    "rancherize-provider": "RancherizeBackupStoragebox\\Provider"
+  }
 }
