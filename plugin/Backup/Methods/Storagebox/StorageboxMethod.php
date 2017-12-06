@@ -244,7 +244,7 @@ class StorageboxMethod implements BackupMethod, RequiresQuestionHelper, Requires
 
 		$mySqlVolume = new Volume();
 		$mySqlVolume->setExternalPath( $data->getNewMysqlVolumeName() );
-		$mySqlVolume->setInternalPath('/var/mysql');
+		$mySqlVolume->setInternalPath('/var/lib/mysql');
 		$mySqlVolume->setDriver( 'local' );
 
 		return $mySqlVolume;
